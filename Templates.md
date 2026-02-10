@@ -2,7 +2,7 @@ When you write a template, you are **not writing code**; you are writing a **blu
 
 - **Template:** The blueprint (e.g., `vector<T>`).
 - **Instantiation:** The specific version the compiler builds for you (e.g., `vector<int>`).
-- 
+
 If you use `vector<int>`, `vector<double>`, and `vector<string>`, the compiler effectively copy-pastes your class code **three times**, replacing `T` with the respective types. 
 This can lead to **Code Bloat** (larger binary size), but it makes the code incredibly fast (no runtime checks).
 
@@ -34,7 +34,7 @@ class Box {
 private:
     T item;
 public:
-    Box(T i) : item(i) {}
+    Box(T i) : item(i) { }
     T getItem() { return item; }
 };
 
@@ -192,4 +192,39 @@ int main() {
 ```
 
 ---
+### 9. Template Meta-programming (TMP)
+
+
+**The "Old School" Way (Pre-C++11)**
+
+Before modern C++, if you wanted to calculate a Factorial at compile time, you couldn't just write a `for` loop. You had to abuse the template system to create a recursive structure.
+
+**The Logic:** Instead of a function calling itself, you have a **Class Template instantiating a new version of itself**.
+
+```cpp
+// 1. Recursive Case
+template<int N>
+class Factorial {
+public:
+    // To calculate value, we multiply N * Factorial<N-1>::value
+    // This forces the compiler to build Factorial<4>, then Factorial<3>...
+    enum { value = N * Factorial<N-1>::value };
+};
+
+// 2. Base Case (Stopping Condition)
+template<>
+class Factorial<1> {
+public:
+    enum { value = 1 };
+};
+
+// Usage
+int x = Factorial<5>::value; // Evaluates to 120 at compile time.
+```
+
+- **How it works:** `Factorial<5>` needs `Factorial<4>`, which needs `Factorial<3>`... all the way down to `Factorial<1>`.
+    
+- **The Downside:** It is incredibly verbose, hard to read, and creates huge compiler error messages.
+
+- **Solution:**  `constexpr`
 
