@@ -194,12 +194,9 @@ int main() {
 ---
 ### 9. Template Meta-programming (TMP)
 
-
-**The "Old School" Way (Pre-C++11)**
-
 Before modern C++, if you wanted to calculate a Factorial at compile time, you couldn't just write a `for` loop. You had to abuse the template system to create a recursive structure.
 
-**The Logic:** Instead of a function calling itself, you have a **Class Template instantiating a new version of itself**.
+Instead of a function calling itself, you have a **Class Template instantiating a new version of itself**.
 
 ```cpp
 // 1. Recursive Case
@@ -222,9 +219,5 @@ public:
 int x = Factorial<5>::value; // Evaluates to 120 at compile time.
 ```
 
-- **How it works:** `Factorial<5>` needs `Factorial<4>`, which needs `Factorial<3>`... all the way down to `Factorial<1>`.
-    
-- **The Downside:** It is incredibly verbose, hard to read, and creates huge compiler error messages.
-
-- **Solution:**  `constexpr`
+**The Downside:** It is incredibly verbose, hard to read, and creates huge compiler error messages. **Solution:**  `constexpr`
 
