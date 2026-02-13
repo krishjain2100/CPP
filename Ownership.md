@@ -38,7 +38,6 @@ int main() {
 **References do not manage lifetime**
 
 ---
-
 ### Example 2: **Pointer does NOT own lifetime either**
 ```cpp
 int main() {
@@ -53,7 +52,7 @@ Again:
 - No destructor
 - No delete
 - Two pointers ≠ two owners
-- 
+
 Pointers are just addresses.
 
 ---
@@ -77,27 +76,5 @@ int main() {
 - `r` and `p` disappear
 - `x` does not
 - Destruction happens **only** when `x`’s lifetime ends
-
----
-### **std::move()**
-transffering ownership
-
-```cpp
-string s1 = "long string 1", s2 = "long string 2"
-string s3 = s1 + s2; 
-```
-
-This evaluates s1 + s2, then calls the copy string constructor with this value, which is expensive.
-What we would instead want is to directly want s3 to be this calcuated value. Ex:
-
-```cpp
-string myString = "hello I am krish"
-string newString = move(myString);
-cout << myString << endl;    // (empty) // complete transfer of ownership, but it still exists
-cout << newString << endl;  // hello I am krish // this takes the string without making any copies.
-
-//This is equivalent to, 
-string newString = static_cast<string&&>(myString);   // (weird af)
-```
 
 ---

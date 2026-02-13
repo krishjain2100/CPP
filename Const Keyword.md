@@ -194,7 +194,7 @@ using Matrix = std::array<int, dim(N)>;
 
 If `N=4`, `dim(N)` is 16. The compiler creates a `std::array<int, 16>`. This is much faster than `std::vector` because it lives on the Stack, not the Heap.
 
-**2. Branching Types (`std::conditional`):** This is a very cool optimization technique. You can choose different variable types based on a number size.
+**2. Branching Types (`std::conditional`):** This is a very cool optimiwation technique. You can choose different variable types based on a number size.
 - **Scenario:** You have a number `N`.
 - If `N < 8`, it fits in a small byte (`uint8_t`).
 - If `N >= 8`, you need a big integer (`uint64_t`).

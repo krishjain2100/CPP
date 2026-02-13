@@ -87,10 +87,10 @@ int main() {
     dp->f(); // prints "derived"
 }
 ```
+
 If a function is declared `virtual` in the Base class, any function in a Derived class with the **same signature** (name + parameters) is automatically `virtual`, whether you write the keyword or not.
 
 ---
-
 ### Override
 
 Override is optional when declaring a member function inside a Derived Class that overrides the same virtual function in the Base Class, but it is good practice to clearly tell the compiler of the intended use of a function. The compiler will throw an error if you try to override a function that does not exist in the Base Class. Example:
