@@ -1,0 +1,95 @@
+
+A shell script is just a plain text file containing terminal commands, but it has a few strict rules you have to follow to make it work on Linux or macOS.
+
+---
+### 1. The Shebang (`#!/bin/bash`)
+
+If you create a file called `build.sh`, the very first line must be exactly this: `#!/bin/bash`
+
+This is called the **shebang**. It tells your operating system, "Do not try to read this file like a normal text document. Hand this file over to the Bash shell program located at `/bin/bash` and let it execute the commands inside."
+
+---
+### 2. Variables (No Spaces Allowed!)
+
+Unlike C++, shell scripts are incredibly pedantic about spaces when assigning variables.
+
+- **Wrong:** `NAME = "Akshat"` 
+(The shell thinks `NAME` is a command and `=` is an argument, and crashes).
+
+- **Right:** `NAME="Akshat"`
+
+To use a variable later, put a dollar sign in front of it: `echo "Hello, $NAME"`
+
+---
+### 3. The Execution Permission (`chmod +x`)
+
+If you just create `build.sh` and type some commands into it, the operating system considers it a harmless text file. If you try to run it, Linux will throw: `Permission denied`.
+
+You have to explicitly grant the file "executable" rights. You do this in the terminal with the change-mode command: `chmod +x build.sh`
+
+This tells the OS, "I promise this is a safe program, allow it to run." 
+You only have to do this once per file.
+
+### 4. Example
+
+
+```bash
+#!/bin/bash
+
+# Define a variable
+OUTPUT_FILE="program_v1"
+
+# Print a message to the terminal
+echo "Starting the compilation process..."
+
+# Run the C++ compiler
+g++ main.cpp utils.cpp -o $OUTPUT_FILE
+
+# Check if the compile was successful using a basic if-statement
+if [ $? -eq 0 ]; then
+    echo "Compilation successful! Running the program..."
+    ./$OUTPUT_FILE
+else
+    echo "Compilation failed! Check your syntax."
+fi
+```
+
+---
+###  5. Use Case
+
+Even though we established that you should **never** use a shell script to actually _compile_ a massive C++ project (because it lacks the smart dependency tracking of Make/CMake), shell scripts are still the backbone of high-performance environments.
+
+You will write `.sh` scripts constantly to do things like:
+
+- **Environment Setup:** A script that automatically downloads external libraries, sets up your Sublime Text build directories, and configures your compiler paths before you even open your code editor.
+    
+- **Automated Testing:** A script that runs your compiled C++ trading algorithm 10,000 times in a row overnight, feeding it different input data files each time, and logging the crashes to a text file.
+
+---
+### The Exit Status
+
+In Linux, every single command or program that finishes running leaves behind a hidden Exit Status (a number between 0 and 255). The variable `$?` always holds the exit status of the **very last command that just finished running**.
+
+- **The C++ Connection:** When you write `int main()` in C++, what is the very last line of code you always write? `return 0;`.
+    
+- When your C++ program finishes, it hands that `0` back to the operating system. If you run your program in the terminal, and then immediately type `echo $?`, the terminal will print `0`. If your program crashes or you write `return 1;`, `$?` will become `1`.
+
+---
+### Success vs. Failure
+
+In the Unix/Linux philosophy, exit codes work like this:
+
+- **`0` means Absolute Success.** The program did exactly what it was supposed to do without a single error.
+    
+- **Anything other than `0` (1, 2, 139, etc.) means Failure.** For example, if `g++` fails to compile your code because you missed a semicolon, it crashes and returns a non-zero number (usually `1`). If your program segfaults, it returns `139`.
+
+---
+### Operators
+
+In traditional bash scripting, you do not use `==` to compare numbers inside single brackets. You use letter flags:
+
+- `-eq` stands for Equal.
+- `-ne` stands for Not Equal.
+- `-gt` stands for Greater Than.
+
+---
