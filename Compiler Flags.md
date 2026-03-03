@@ -40,7 +40,7 @@ If you run `g++ -c main.cpp` exactly like that, the compiler will successfully c
 - **`-std=c++17`**: Forces the compiler to use the C++17 standard.
 - If you try to use modern features (like `std::optional`) without setting this, the compiler might default to an older standard like C++11 and throw errors.
 ---
-### Warning Flags: The "Clean Code" Enforcers
+### Warning Flags
 
 - **`-Wall`**: Enables all the most common warning messages. (Ironically, it doesn't actually enable _all_ warnings, just the universally agreed-upon ones).
   
@@ -51,7 +51,7 @@ If you run `g++ -c main.cpp` exactly like that, the compiler will successfully c
 - **`-Werror`**: Turns every single warning into a fatal compilation error.
 
 ---
-### Optimization Flags
+### Optimisation Flags
 
 When you compile code, the compiler can actively rewrite your logic behind the scenes to make it run faster.
 
@@ -137,6 +137,12 @@ You could also do multiple at once:
 
 ```bash
 g++ -DDEBUG -DLINUX_ENV -DUSE_NEW_API main.cpp -o program
+```
+
+If you want to set a macro to a specific value, you use an equals sign `=`: 
+
+```bash
+g++ -DMAX_CONNECTIONS=500 main.cpp -o program
 ```
 
 In high-frequency trading, evaluating an `if (is_debug_mode)` statement at runtime costs precious CPU cycles (due to branching). By using preprocessor macros and the `-D` flag, you completely eradicate the logging code from the final binary in your Release build. The CPU doesn't have to evaluate an `if` statement because the code literally doesn't exist anymore.
