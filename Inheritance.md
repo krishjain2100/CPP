@@ -1,4 +1,10 @@
 
+### Related
+- [[Polymorphism]]
+- [[Encapsulation]]
+- [[RTTI]]
+- [[Scope Resolution]]
+
 There are **three ways** to declare a child class in C++. 
 The mode can be **`public`**, **`protected`**, or **`private`**.
 

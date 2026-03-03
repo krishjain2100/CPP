@@ -1,3 +1,9 @@
+### Related
+- [[Ownership]]
+- [[Move Semantics]]
+- [[Const Keyword]]
+- [[Value Categories]]
+
 (in the memory library)
 
 i) **Exclusive ownership:** exactly one owner at a time (e.g. std::unique_ptr). When that owner is destroyed, the resource is destroyed.

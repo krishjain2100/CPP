@@ -1,3 +1,9 @@
+### Related
+- [[Inheritance]]
+- [[Polymorphism]]
+- [[Const Keyword]]
+- [[Static Keyword]]
+
 ### **Constructor** 
 must be public, along with destructor
 

@@ -1,4 +1,10 @@
 
+### Related
+- [[Smart Pointers]]
+- [[Move Semantics]]
+- [[Const Keyword]]
+- [[Value Categories]]
+
 **Ownership = responsibility for the resource’s lifetime.**
 
 If some object “owns” a resource (usually heap memory), it is responsible for freeing it when appropriate (e.g., calling delete, or letting a smart pointer’s destructor free it).

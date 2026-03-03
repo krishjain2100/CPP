@@ -1,3 +1,9 @@
+### Related
+- [[Static Keyword]]
+- [[Smart Pointers]]
+- [[Ownership]]
+- [[Templates]]
+
 ### 1. Const Variables
 
 A `const` variable cannot be changed after initialisation. It **must** be initialised when declared.

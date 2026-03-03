@@ -1,3 +1,9 @@
+### Related
+- [[Polymorphism]]
+- [[Const Keyword]]
+- [[Static Keyword]]
+- [[Value Categories]]
+
 When you write a template, you are **not writing code**; you are writing a **blueprint**. The compiler doesn't generate any machine code until you actually _use_ the template.
 
 - **Template:** The blueprint (e.g., `vector<T>`).

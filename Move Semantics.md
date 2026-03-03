@@ -1,4 +1,10 @@
 
+### Related
+- [[Value Categories]]
+- [[Noexcept keyword]]
+- [[Ownership]]
+- [[Smart Pointers]]
+
 We know `&&` catches temporary things. This allows us to write a **Move Constructor**.
 
 Consider you have a `Vector` class that manages a raw pointer to a huge array.

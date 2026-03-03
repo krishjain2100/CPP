@@ -1,4 +1,10 @@
 
+### Related
+- [[Compiler Flags]]
+- [[Shell Scripts]]
+- [[CMake]]
+- [[Qt Development]]
+
 ### Core Mechanics
 
 A shell script, with 500 `g++` commands to build a large system, will execute every single command from top to bottom, every time you run it.
@@ -66,7 +72,7 @@ It parses the entire file to construct a Directed Acyclic Graph in its memory, a
 3. Bottom Up Execution
    
 	Once Make hits the bottom of one branch, it bubbles back up.
-	If it decides `main.o` needs to be rebuilt, it puts the command `g++ -c main.cpp` on its "To-Do List".
+	If it decides `main.o` needs to be rebuilt, it puts the command `g++ -c main.cpp` on its "To Do List".
 	
 	Then, it repeats the exact same DFS process for the next branch: `utils.o`. It checks `utils.cpp` and `utils.h` , makes a decision, and then moves to `math.o`.
 
@@ -302,7 +308,6 @@ This allows your very first build to succeed. `g++` runs, creates the `.o` files
 
 
 ---
-
 ### The Downfall of Make
 
 #### 1. The Platform Dependency

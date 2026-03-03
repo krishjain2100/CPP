@@ -1,4 +1,10 @@
 
+### Related
+- [[Makefile]]
+- [[Compiler Flags]]
+- [[CMake]]
+- [[Qt Development]]
+
 A shell script is just a plain text file containing terminal commands, but it has a few strict rules you have to follow to make it work on Linux or macOS.
 
 ---

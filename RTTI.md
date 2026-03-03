@@ -1,3 +1,9 @@
+### Related
+- [[Polymorphism]]
+- [[Inheritance]]
+- [[Static Keyword]]
+- [[Qt Development]]
+
 RTTI stands for **Run-Time Type Information**.
 
 It is a mechanism that allows the program to determine the type of an object **while the program is running**, rather than just at compile time.

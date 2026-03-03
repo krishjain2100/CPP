@@ -1,4 +1,10 @@
 
+### Related
+- [[Inheritance]]
+- [[RTTI]]
+- [[Templates]]
+- [[Encapsulation]]
+
 What Is Polymorphism? Same interface, different behaviour
 
 1. **Dynamic Polymorphism (`virtual`):** Decisions made at **Runtime** (Slower, flexible).
