@@ -1,0 +1,616 @@
+# Related
+
+- [[Makefile]]
+- [[Compiler Flags]]
+- [[Qt Development]]
+- [[Shell Scripts]]
+- [[GNU C++]]
+
+---
+### What is CMake?
+
+It is a **Meta-Build System** (a build system that builds build systems). Its only job is to look at your project, figure out what OS you are currently using, and write the build files. CMake has absolutely no idea how to turn a `.cpp` file into a `.o` file, and it never calls `g++` directly
+
+---
+### The Core Problem It Solves
+
+If you use Make, you have to write different Makefiles because the terminal commands (`rm` vs `del`) and compiler paths are different on every OS.
+Instead of writing a Makefile, you write a single `CMakeLists.txt`. You describe your project in broad, conceptual terms: _"I have an executable named `trading_engine`, and it needs `main.cpp` and `math.cpp`."_
+
+When you run CMake, it acts as a translator. It reads your `CMakeLists.txt` and **generates** the native build scripts for whatever machine it happens to be running on.
+
+- If you run it on your Linux machine, CMake thinks: "I will generate a  Linux `Makefile` that uses `rm -f` and standard paths."
+- If you decide Make is too slow, you can tell CMake to generate files for **Ninja** (an incredibly fast, modern alternative to Make) without changing a single line of your C++ code.
+
+---
+### Framework Integration
+
+When you start building massive graphical user interfaces with frameworks like Qt, raw Makefiles become completely impossible to maintain. You would have to manually find and link dozens of individual `.so` or `.dll` files.
+
+Because CMake is the industry standard, massive frameworks are designed to talk to it natively. CMake can actively search your hard drive, find exactly where a complex library is installed, and automatically generate all the `-I` and `-l` flags required to stitch it into your project
+
+---
+### Minimal CMake configuration
+
+If you omit any of these three, CMake will generally refuse to work.
+
+#### 1. The Minimum Required Version
+
+
+```cmake
+cmake_minimum_required(VERSION 3.10)
+```
+
+It tells the CMake engine: _"If the user has a version of CMake less than 3.10, crash immediately and tell them to update. Do not attempt to parse the rest of this file."_
+
+#### 2. The Project Declaration
+
+```CMake
+project(TradingEngine VERSION 1.0.0 LANGUAGES CXX)
+```
+
+This line tells CMake what you are actually building.
+- **`TradingEngine`**: The internal name of your project.
+- **`VERSION`**: Completely optional, but highly recommended for packaging your software later.
+- **`LANGUAGES CXX`**: This is crucial. C++ is referred to as `CXX` in CMake. This tells CMake to actively search the host computer for a C++ compiler (like `g++` or `clang++`), verify that it works, and set up all the internal variables. (If you omit this, CMake defaults to looking for both C and C++).
+
+#### 3. Add Executable
+
+```CMake
+add_executable(app main.cpp math.cpp)
+```
+
+This is the modern equivalent of the Makefile linking rule.
+
+- **`app`**: This is the name of the final program you want to generate (e.g., `./app`).
+- **`main.cpp math.cpp`**: This is your list of source files.
+
+
+If you put `main.cpp` and `math.cpp` in a folder, and add a file named `CMakeLists.txt` containing only this:
+
+```CMake
+cmake_minimum_required(VERSION 3.10)
+project(TradingEngine LANGUAGES CXX)
+add_executable(app main.cpp math.cpp)
+```
+
+---
+### More Options
+#### 1. Creating a Library Target
+
+```CMake
+add_library(mylib utils.cpp math.cpp)
+```
+
+ It tells CMake to take `utils.cpp` and `math.cpp` and compile them into a static library archive (usually resulting in a file named `libmylib.a` on Linux/Mac, or `mylib.lib` on Windows). Now, `mylib` is officially recognised by CMake as a completely independent **Target**.
+
+- **`add_executable():`** The strict requirement here is that at least one of the `.cpp` files passed to this command **must contain an `int main()` function**. The operating system requires this as the starting line to actually execute the binary.
+
+- **`add_library()`:** This is strictly a bundled archive of raw logic and algorithms. It typically **must not** contain an `int main()` function. It cannot be run by the OS on its own; it must be linked into an executable frame.
+ 
+#### 2. Linking targets
+
+```CMake
+target_link_libraries(program mylib)
+```
+
+This is the CMake equivalent of Make's `-l` flag.
+It tells CMake to take the executable target named `program` and stitch the library target named `mylib` into it.
+You don't have to tell CMake where `libmylib.a` is saved on your hard drive. Because both `program` and `mylib` are CMake targets, CMake perfectly calculates the file paths and generates the exact `-L` and `-l` flags required to link them together in the final Makefile.
+
+#### 3. Setting C++ Requirements
+
+```CMake
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+```
+
+The industry standard is to enforce the C++ version globally at the very top of your `CMakeLists.txt` file.
+
+- **`set(CMAKE_CXX_STANDARD 17)`**: This global variable tells CMake to automatically inject the `-std=c++17` flag into every single target we create from this point forward.
+
+- **`set(CMAKE_CXX_STANDARD_REQUIRED ON)`**: This acts as a fatal error check. If the computer compiling this code has an old version of `g++` that doesn't support C++17, CMake will instantly crash and refuse to generate the Makefile. If you don't turn this `ON`, CMake might silently downgrade to C++11 without warning you.
+
+- **`set(CMAKE_CXX_EXTENSIONS OFF):`** By default, compilers like `g++` allow non-standard [[GNU C++ ]] features that aren't strictly part of the official C++ standard. If you use them, your code might compile perfectly on Linux but immediately crash on a Windows machine using MSVC. Turning this `OFF` forces the compiler to be strictly standard-compliant, guaranteeing your code to be cross-platform.
+
+---
+### The Out-of-Source Build
+
+Running `g++ -c` drops a bunch of `.o` files and `.d` dependency files right next to your beautiful `.cpp` source code.
+
+If you run CMake the old way, it is even worse. It will generate a massive `CMakeCache.txt` file, a `CMakeFiles/` directory, and a giant generated `Makefile` directly into your project root. This is called an **In-Source Build** The modern solution is the **Out-of-Source Build**.
+
+---
+### Source Tree vs. Build Tree
+
+- **The Source Tree:** The folder containing your `.cpp` files, `.h` files, and `CMakeLists.txt`. This folder should remain  completely untouched by the compiler.
+- **The Build Tree:** A throwaway folder (usually named `build/`) where CMake dumps every single generated file, object file, and the final executable.
+
+Because of this separation, modern CMake workflows require a strict **Two-Step Dance** in the terminal.
+
+#### 1. The Generation Phase
+
+In your project folder (where `CMakeLists.txt` lives) run:
+
+```bash
+cmake -S . -B build/
+```
+
+- **`cmake`**: Wake up the CMake meta-build system.
+- **`-S .`**: The Source is here (`.`). This tells CMake where to find the `CMakeLists.txt` file to read the blueprint.
+- **`-B build/`**: Put th Build files in a folder named `build/`. If the folder doesn't exist, CMake will automatically create it for you.
+
+CMake reads your blueprint, detects your OS, finds your C++ compiler, and writes a `Makefile`. Zero code is compiled during this step.
+
+#### 2. The Compilation Phase
+
+Now that the `build/` folder contains the generated `Makefile`, you tell CMake to execute it.
+
+```bash
+cmake --build build/
+```
+
+You are telling CMake to look inside the `build/` folder and trigger the build system you put in there. If you are on Linux, CMake secretly runs `make` for you. If you are on Windows, CMake secretly runs `MSBuild` for you.
+    
+This is the brilliant abstraction of CMake. You never have to type `make` or remember OS-specific commands again. You just use `cmake --build`, and CMake handles the translation.
+
+
+In `Make` systems We had to write a `.PHONY: clean` target and list every `.o` file to delete them.
+With an out-of-source build, the concept of a `clean` target is  obsolete.
+
+If build gets corrupted, or if you change a massive compiler flag and want to start fresh, you  just delete the build folder and create a fresh build.
+
+```bash
+rm -rf build/
+```
+
+---
+### Targets vs. Global Variables
+
+Historically, CMake relied entirely on **Global Variables**. Modern CMake (version 3.0 and newer) completely abandoned this in favour of **Targets**.
+
+#### 1. Global Variables
+
+Earlier, if you wanted to add an include folder or a compiler flag, you used commands that modified the global state of the entire project.
+
+```CMake
+set(CMAKE_CXX_FLAGS "-O3")
+include_directories(include/)
+
+add_executable(app main.cpp)
+add_executable(test_suite tests.cpp)
+add_library(math_tools math.cpp)
+```
+
+**The Fatal Flaw:** Commands like `include_directories()` and setting `CMAKE_CXX_FLAGS` are contagious. By setting `-O3` globally, CMake injects that optimisation flag into `app`, `test_suite`, and `math_tools`. But what if you want `test_suite` to compile with `-g` (Debug) so you can actually step through it with a debugger? Too bad. The global variable forces `-O3` onto everything.
+
+In a large codebase, this creates "Dependency Hell." A tiny change to an include directory for one small library suddenly infects 500 other files, causing massive naming collisions and agonisingly slow recompilations.
+
+#### 2. Targets
+
+Modern CMake treats your build system like Object-Oriented Programming.
+You create an Object (called a **Target**). A target is either an executable (`add_executable`) or a library (`add_library`).
+
+Once the Target is created, you strictly attach Properties _only_ to that specific Target using the `target_*` family of commands.
+
+```CMake
+add_executable(app main.cpp)
+add_executable(test_suite tests.cpp)
+
+# We attach properties ONLY to the target that needs them
+target_compile_options(app PRIVATE -O3)
+target_compile_options(test_suite PRIVATE -g)
+
+target_include_directories(app PRIVATE include/)
+```
+
+By using `target_compile_options`, CMake builds a strict firewall between your components:
+
+1. When CMake generates the Makefile for `app`, it compiles `main.cpp` with `-O3` and tells it to look in the `include/` folder.
+2. When CMake generates the Makefile for `test_suite`, it compiles `tests.cpp` with `-g`. It does _not_ give it access to the `include/` folder.
+
+The build is perfectly isolated. If `math_tools` breaks, it won't take `app` or `test_suite` down with it.
+
+---
+### The Three Main Target Commands
+
+1. **`target_compile_options()`**: Replaces `CXXFLAGS`. Used to inject compiler flags (like `-Wall`, `-Wextra`, `-O2`).
+
+2. **`target_include_directories()`**: Replaces `-I`. Used to tell the compiler where your `.h` header folders are located.
+
+3. **`target_link_libraries()`**: Replaces `-l` and `LDFLAGS`. Used to stitch external libraries (or your own internal libraries) into the final target.
+
+---
+### Visibility: PRIVATE, PUBLIC, and INTERFACE
+
+In modern CMake, when you link a library or add an include directory, you are forced to choose one of these three visibility keywords.
+
+Imagine this scenario:
+1. You write a library called `MathLib`. To make it work, `MathLib` relies on an external library called `Boost`.
+2. Later, you write your main `app`, and you tell CMake: `target_link_libraries(app MathLib)`.
+
+**The  Question:** Does `app` also need to know where `Boost` is?
+
+The answer entirely depends on how `MathLib` was written. CMake uses `PRIVATE`, `PUBLIC`, and `INTERFACE` to mathematically control how these dependencies flow down the chain.
+
+#### 1. `PRIVATE`
+
+You use `PRIVATE` when your target uses a dependency _internally_ inside its `.cpp` files, but completely hides it from the outside world.
+
+- **Example:** `MathLib.cpp` includes `<boost/math.hpp>` to do some heavy calculations, but `MathLib.h` (the header that the rest of your project sees) just has standard C++ code
+  
+- **The Command:** `target_link_libraries(MathLib PRIVATE Boost)`
+  
+- **The Result:** When CMake builds `MathLib`, it gives it the `Boost` flags. When CMake builds `app` (which links `MathLib`), it does not add Boost as it's dependency, i.e, it stops the dependency from spreading.
+
+#### 2. `PUBLIC`
+
+You use `PUBLIC` when your target uses a dependency, AND anyone who uses your target also needs it.
+
+- **Example:** This time, you put `#include <boost/math.hpp>` directly inside `MathLib.h`. Now, when your `app` tries to `#include "MathLib.h"`, the compiler will crash if `app` doesn't also know where the Boost folders are.
+  
+- **The Command:** `target_link_libraries(MathLib PUBLIC Boost)`
+  
+- **The Result:** It gives the Boost flags to `MathLib`, and it automatically pushes all of Boost's `-I` and `-l` flags down into `app` as well.
+
+#### 3. `INTERFACE`
+
+This is the rarest, but it is incredibly powerful. You use it when your target _doesn't_ use the dependency itself, but anyone who links to your target _must_ use it.
+
+- **Example (Header-Only Libraries):** Let's say you write a library that is 100% templates. It has no `.cpp` files. You can't compile a `.h` file into a `.o` library.
+
+- **The Command:** You create an empty target: `add_library(MathLib INTERFACE)`. Then you attach the include folder: `target_include_directories(MathLib INTERFACE include/)`.
+
+- **The Result:** CMake knows `MathLib` isn't a real compiled library. But when `app` links to it, CMake acts as a courier and passes the `include/` folder straight to `app`.
+
+---
+### The Legacy Default (`PUBLIC`)
+
+Before CMake 3.0 was released, you just listed libraries, and CMake assumed you wanted them applied globally.
+
+To prevent millions of old projects from instantly breaking when Modern CMake was released, the developers left a fallback:
+**If you do not specify a visibility keyword, CMake defaults to treating it as `PUBLIC`.** 
+
+**Caution:** While the fallback exists, relying on it is considered incredibly bad practice because
+CMake has a hardcoded rule to force developers into good habits. If you use a keyword on a target, you _must_ use keywords for every other dependency on that target. If you write this:
+
+```CMake
+target_link_libraries(program mylib)          # Relies on the default
+target_link_libraries(program PRIVATE Boost)  # Uses a modern keyword
+```
+
+CMake will immediately crash and throw a fatal error: _"Cannot specify link libraries for target 'program' which is not built by this project. You must be consistent."_
+
+---
+### Controlling the Compiler
+
+In modern CMake, we handle this in two distinct ways: **Build Types** (the automatic way) and **Target Properties** (the manual way).
+
+#### 1. `CMAKE_BUILD_TYPE` 
+
+CMake has built-in, pre-configured Build Profiles that automatically inject the mathematically perfect optimisation and debugging flags for whatever compiler you use.
+
+You can control this from the terminal during the Generation Phase, leaving your `CMakeLists.txt` completely clean:
+
+- **For Debugging:** `cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug` 
+	(CMake automatically injects `-g` and disables optimisation)
+- **For Production:** `cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Release` 
+	(CMake automatically injects `-O3` and strips debug symbols).
+
+### 2.`target_compile_options`
+
+While CMake handles optimisation automatically, you still need to manually enforce your warning flags (`-Wall`, `-Wextra`, `-Werror`).
+
+Instead of a global `CXXFLAGS` variable, you attach them directly to the specific target using `target_compile_options()`.
+
+```CMake
+add_executable(app main.cpp)
+
+# Enforce strict warnings ONLY on our app
+target_compile_options(app PRIVATE -Wall -Wextra -Werror)
+```
+
+If you download a messy open-source math library from GitHub and add it to your project, you do not want your strict `-Werror` flag leaking into their code and breaking your build. By using `PRIVATE`, you ensure your app is held to a high standard, while allowing the messy external library to compile quietly in the background.
+
+**Compiler-Specific Flags**
+
+```CMake
+target_compile_options(app PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -pedantic>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+)
+```
+
+Different compilers use completely different warning flags (`-Wall` for GCC/Clang, `/W4` for Microsoft Visual C++).
+
+### 3.`target_compile_definitions`
+
+In manual compilation notes, we saw how evaluating an `if (is_debug_mode)` statement at runtime costs precious CPU cycles, and how using `#ifdef` with the `-D` flag completely strips logging code out of the binary. To do this in modern CMake, we use `target_compile_definitions()`.
+
+```CMake
+add_executable(trading_engine core.cpp order_book.cpp)
+
+# This is the exact equivalent of passing -DENABLE_LOGGING=1 to g++
+target_compile_definitions(trading_engine PRIVATE ENABLE_LOGGING=1)
+```
+
+If you pair this with CMake's generator expressions, you can  tell CMake: _"Only define this macro if we are currently building in Debug mode."_ 
+
+```CMake
+# Inject the -DDEBUG flag if the terminal command said CMAKE_BUILD_TYPE=Debug
+target_compile_definitions(trading_engine PRIVATE 
+	$<$<CONFIG:Debug>:DEBUG>)
+```
+
+It is essentially an `if` statement evaluated by CMake right before it writes the Makefile.
+
+**1. The Inner Check:** `$<CONFIG:Debug>` 
+This asks CMake:
+	Did the user type `-DCMAKE_BUILD_TYPE=Debug` in the terminal?"
+	
+- If yes, this evaluates to `1` (True).
+- If no (e.g., they typed Release), this evaluates to `0` (False).
+
+**2. The Outer Check:** `$< Condition : Result >` 
+This asks CMake if the condition on the left is true, output the word on the right.
+
+This guarantees your log statements are physically erased from the C++ code the moment you switch to a Release build, without you ever touching a single file.
+
+***
+### Scaling Up: Multi-Folder Projects
+
+When you are building something complex, you do not dump 500 `.cpp` files into a single folder. You organise your architecture logically: a folder for networking, one for math algorithms, and one for the core engine. It is bad to manage them all from a single, giant `CMakeLists.txt` file at the root of your project. Modern CMake solves this with **Delegation**.
+
+
+You place a tiny `CMakeLists.txt` file inside _every single sub-folder_. Example:
+
+```Plaintext
+trading_system/
+├── CMakeLists.txt         (The Root)
+├── math_lib/
+│   ├── CMakeLists.txt     (The Math Script)
+│   ├── math.cpp
+│   └── math.h
+└── src/
+    ├── CMakeLists.txt     (The Core Script)
+    └── engine.cpp
+```
+
+#### 1. `add_subdirectory()`
+
+The `CMakeLists.txt` at the root of your project's only job is to set the global rules (like C++17) and then act as a dispatcher, telling CMake to go look inside the folders.
+
+When CMake reads `add_subdirectory()`, it literally pauses, dives into that folder, and reads the `CMakeLists.txt` inside it before moving on.
+
+
+```CMake
+# trading_system/CMakeLists.txt
+cmake_minimum_required(VERSION 3.10)
+project(TradingSystem LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Delegate to the sub-folders
+add_subdirectory(math_lib)
+add_subdirectory(src)
+```
+
+#### 2. The Local Library Script
+
+Inside the `math_lib` folder, the script only cares about building the math library.
+
+```CMake
+# trading_system/math_lib/CMakeLists.txt
+# Create the target
+add_library(fast_math math.cpp)
+
+# Make the current folder PUBLIC so anyone linking to fast_math can see math.h
+target_include_directories(fast_math PUBLIC .)
+```
+
+#### 3. The Local Executable Script
+
+Inside the `src` folder, the script only cares about building the final executable.
+
+```CMake
+# trading_system/src/CMakeLists.txt
+add_executable(app engine.cpp)
+
+# Link the library we built in the other folder!
+target_link_libraries(app PRIVATE fast_math)
+```
+
+Once a target is created anywhere in your project, CMake remembers it globally. CMake calculates the  relative paths between the folders automatically so you don't have to. This is why we can link `fast_math` to `app` which are in separate folders.
+
+---
+### Static vs. Shared Libraries
+
+When you use `add_library(fast_math math.cpp)`, CMake has to decide how to compile it.You can manually control this behaviour depending on your performance needs.
+
+- **`add_library(fast_math STATIC math.cpp)`**: It builds a **Static Library** (an `.a` or `.lib` file). The linker literally copies and pastes the compiled machine code from the math library directly into your final `app` executable. The file size of `app` gets bigger, but at runtime, the execution is incredibly fast because the CPU doesn't have to jump around your hard drive looking for the library.
+
+- **`add_library(fast_math SHARED math.cpp)`**: It builds a separate Dynamic Library (a `.so` on Linux or `.dll` on Windows). The final `app` executable is very small, but when you run `./app`, the operating system has to pause and load the `.so` file into memory before the program can start.
+
+By default it uses `STATIC`.
+
+---
+### External Frameworks
+
+You might use a massive framework like **Qt**. It is difficult to link Qt manually using raw compiler flags since it has dozens of separate modules, hundreds of include directories, and complex linking requirements.
+
+#### 1. `find_package()`
+
+You simply tell CMake to go find the framework installed on the current computer.
+
+```CMake
+# Tell CMake to hunt down the Qt6 framework
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+```
+
+Here is exactly what this single line of code does:
+
+- **`find_package(Qt6)`**: CMake actively searches standard system directories (like `C:\Program Files` on Windows or `/usr/local/` on Linux) looking for a specific configuration file left behind when Qt was installed.
+
+- **`REQUIRED`**: If your teammate forgets to install Qt on their machine, CMake will instantly throw a fatal error during the Generation Phase and tell them exactly what is missing. Without `REQUIRED`, CMake would  generate a broken Makefile.
+
+- **`COMPONENTS Widgets`**: Massive frameworks are modular. This tells CMake to only find the specific pieces you actually need.
+
+#### 2. Namespace
+
+Once CMake successfully finds Qt, it automatically creates imported **Targets** for you. You don't link raw files; you link the targets. To link the framework to your executable, you use **Namespace** (`::`)
+
+```CMake
+add_executable(gui_app main.cpp mainwindow.cpp)
+
+# Link the Qt framework to your application
+target_link_libraries(gui_app PRIVATE Qt6::Widgets)
+```
+In the old days, you might write `target_link_libraries(gui_app PRIVATE qt6widgets)`. If you made a typo and wrote `qt6widgetts`, CMake wouldn't notice. It would generate the Makefile, hand it to the linker, and the linker would crash with a massive, unreadable `undefined reference` error.
+
+By using the `Qt6::Widgets` namespace, you are telling CMake that this is strictly a CMake Target. If you make a typo with a namespace, CMake catches it immediately during the Generation Phase and tells you: _"Target 'Qt6::Widgetts' not found."_
+
+#### 3. Putting It All Together
+
+```CMake
+cmake_minimum_required(VERSION 3.16)
+project(TradingGUI LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
+add_executable(app main.cpp)
+
+target_compile_options(app PRIVATE -Wall -Wextra)
+target_link_libraries(app PRIVATE Qt6::Widgets)
+```
+
+---
+### **The Build vs. Install Interface**
+
+```CMake
+target_include_directories(mylib 
+    PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE 
+		src/internal
+)
+```
+
+- **`$<BUILD_INTERFACE:...>`**: When _you_ are actively writing the code and compiling it on your machine, CMake tells the compiler to look in your local project folder (`${CMAKE_CURRENT_SOURCE_DIR}/include`) for the headers.
+
+- **`$<INSTALL_INTERFACE:include>`**: If someone else installs your finished library to their system (e.g., into `/usr/local/include`), CMake automatically changes the path so it points to the installed location instead of your personal project folder.
+
+---
+### CTest
+
+If you want to make sure your code actually works, you write dozens of separate, isolated testing programs (e.g., `test_math.cpp`, `test_orderbook.cpp`).
+
+**CTest is an automated supervisor.** It is a  separate program bundled with CMake that automatically executes and summarises your independent testing programs.
+
+#### 1. `enable_testing()`
+
+If you just type `ctest` in a normal CMake build folder, the terminal will say: _"No tests were found!!!"_ When you put `enable_testing()` in your root `CMakeLists.txt`, you are telling CMake to generate a hidden file called `CTestTestfile.cmake`. This hidden file is the master ledger. It keeps track of every single test in your entire project.
+
+#### 2. `add_subdirectory`
+
+You absolutely never mix your testing code with your production source code.
+- Production code goes in `src/`.
+- Test code goes in `tests/`.
+
+By calling `add_subdirectory(tests)` in the root script, you tell CMake to jump into the `tests/` folder and read the `CMakeLists.txt` file there which keeps your production environment clean.
+
+#### 3. Inside `tests/CMakeLists.txt`
+
+**Standard CMake**
+
+```CMake
+# 1. Compile the test code into an executable program
+add_executable(math_tester test_math.cpp)
+
+# 2. Link the actual math library you want to test into the executable
+target_link_libraries(math_tester PRIVATE mylib)
+```
+
+`test_math.cpp` is just a standard C++ file with an `int main()` function. Inside that file, you include your math library, run some calculations, and check if the answers are correct.
+
+**`add_test()`**
+
+Right now, `math_tester` is just a normal program sitting on your hard drive. 
+
+```CMake
+# Add a test named "MathLogicTest". 
+# When you run it, execute the "math_tester" program.
+add_test(NAME MathLogicTest COMMAND math_tester)
+```
+
+#### 4. The Execution (`ctest`)
+
+You have generated the build files (`cmake -S . -B build/`). You have compiled the code (`cmake --build build/`).
+
+Now, instead of running your programs manually, you navigate into your `build/` folder and simply type:
+
+```CMake
+ctest
+```
+
+Here is what happens:
+
+1. CTest wakes up and reads the hidden master ledger.
+2. It sees `MathLogicTest` is registered to the `math_tester` binary.
+3. CTest executes `./math_tester` in the background.
+4. **It watches the exit code.** If your C++ program hits `return 0;`, CTest marks a green **PASS**. If your program crashes or hits `return 1;`, CTest marks a red **FAIL**.
+5. It prints a summary to your terminal: _"100% tests passed, 0 tests failed out of 1."_
+
+---
+### Built-in Variables and Messaging
+
+**`message(STATUS "...")`** 
+This command prints custom text to the terminal while you run `cmake -S . -B build/`.
+
+```CMake
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Source dir: ${CMAKE_SOURCE_DIR}")
+message(STATUS "Binary dir: ${CMAKE_BINARY_DIR}")
+message(STATUS "Project name: ${PROJECT_NAME}")
+```
+
+- **`${CMAKE_CXX_COMPILER}`**: Prints the exact absolute path to the `g++` or `clang++` executable CMake decided to use.
+- **`${CMAKE_SOURCE_DIR}`**: The absolute path to your root project folder 
+- **`${CMAKE_BINARY_DIR}`**: The absolute path to your `build/` folder.
+
+---
+### Custom Options (User Configuration)
+
+It allows the person compiling the code to turn features on or off from the terminal without ever opening your code.
+
+#### **1. Defining Options**
+
+```CMake
+option(BUILD_TESTS "Build test programs" ON)
+option(USE_OPENMP "Enable OpenMP support" OFF)
+```
+
+This defines two toggles. By default, it will build the tests, but it will _not_ enable OpenMP (a multi-threading library).
+
+#### **2. Conditional Logic (`if/endif`)**
+
+```CMake
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+```
+
+CMake will skip the `tests` folder entirely if that option is turned off.
+
+#### **3. Controlling it from the Terminal**
+
+`cmake -S . -B build/ -DBUILD_TESTS=OFF`
+
+CMake reads the terminal command, flips the internal `BUILD_TESTS` variable to `OFF`, completely skips the `add_subdirectory(tests)` block, and generates a streamlined, production-only build system.
+
+---

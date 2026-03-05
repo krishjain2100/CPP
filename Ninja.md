@@ -1,0 +1,37 @@
+It is a modern, blazingly fast replacement for Make.
+#### 1. Designed for Machines, Not Humans
+
+Ninja was created by a Google engineer working on the Chromium browser (which has tens of thousands of C++ files). He realised that if we are using CMake to generate our build files automatically, the build files _don't need to be readable by humans_.
+
+Whereas, Make was created in 1976 with a dual purpose: it had to be a language that humans could write, and a language the computer could execute. Because of this, Makefiles allow complex variables, and `if/else` statements
+
+A `.ninja` build file is essentially flattened assembly code for a build system. It strips out all variables, logic, and decision-making. It is just a massive, pre-calculated list of exact file paths and dependencies.
+
+#### 2. The Speed Advantage
+
+Because a `Makefile` has complex logic, Make takes a long time just to read the file and figure out things before it even starts compiling. In massive projects, Make can stall for 30 seconds just thinking about the dependency graph.
+
+Because a `.ninja` file is perfectly flat and pre-calculated, the Ninja program parses it almost instantly. 
+
+#### 3. Automatic Parallelism
+
+If you want Make to use all the cores on your CPU to compile files simultaneously, you have to manually tell it how many cores you have (e.g., `make -j8`). 
+
+Ninja is designed for massive parallelism by default. It automatically detects how many CPU cores you have and instantly maxes them out to compile as many independent `.cpp` files simultaneously as mathematically possible.
+
+#### 4. How to use it in CMake
+
+During the Generation Phase, you simply pass the `-G` (Generator) flag to CMake:
+
+```Bash
+# Tell CMake to generate Ninja files instead of Makefiles
+cmake -G Ninja -S . -B build/
+```
+
+Then, you run the exact same build command as always:
+
+```Bash
+cmake --build build/
+```
+
+---
