@@ -1,8 +1,8 @@
 
 ### Related
 - [[Scope Resolution]]
-- [[Namespaces]]
-- [[Static Keyword]]
+- [[Namespace]]
+- [[Static]]
 - [[Templates]]
 
 An **Enum** is a user-defined data type that consists of a set of named integer constants. It makes code more readable by replacing "magic numbers" (0, 1, 2) with meaningful names (RED, GREEN, BLUE).

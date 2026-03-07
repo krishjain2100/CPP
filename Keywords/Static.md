@@ -1,7 +1,7 @@
 ### Related
 - [[Scope Resolution]]
-- [[Namespaces]]
-- [[Const Keyword]]
+- [[Namespace]]
+- [[Const]]
 - [[RTTI]]
 
 ### 1. The Static Variable

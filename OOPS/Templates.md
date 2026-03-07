@@ -1,7 +1,7 @@
 ### Related
 - [[Polymorphism]]
-- [[Const Keyword]]
-- [[Static Keyword]]
+- [[Const]]
+- [[Static]]
 - [[Value Categories]]
 
 When you write a template, you are **not writing code**; you are writing a **blueprint**. The compiler doesn't generate any machine code until you actually _use_ the template.
@@ -181,7 +181,8 @@ int main() {
 
 ### 8. The Guardrails
 
-For a long time, template errors were notoriously hideous. **Concepts** fix this by allowing you to put constraints on what `T` can be.
+For a long time, template errors were notoriously hideous. 
+**Concepts** fix this by allowing you to put constraints on what `T` can be.
 
 ```cpp
 template <typename T>
@@ -225,5 +226,5 @@ public:
 int x = Factorial<5>::value; // Evaluates to 120 at compile time.
 ```
 
-**The Downside:** It is incredibly verbose, hard to read, and creates huge compiler error messages. **Solution:**  `constexpr`
+**The Downside:** It is incredibly verbose, hard to read, and creates huge compiler error messages. **Solution:**  [[Const|constexpr]]
 

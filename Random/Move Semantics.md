@@ -1,7 +1,7 @@
 
 ### Related
 - [[Value Categories]]
-- [[Noexcept keyword]]
+- [[Noexcept]]
 - [[Ownership]]
 - [[Smart Pointers]]
 

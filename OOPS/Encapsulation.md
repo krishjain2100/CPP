@@ -1,8 +1,8 @@
 ### Related
 - [[Inheritance]]
 - [[Polymorphism]]
-- [[Const Keyword]]
-- [[Static Keyword]]
+- [[Const]]
+- [[Static]]
 
 ### **Constructor** 
 must be public, along with destructor
@@ -34,7 +34,7 @@ public:
 
  2. **Some members _must_ use initialisation lists**
 	a) `const` members
-	b) reference members: References **must** be initialized when the object is created.
+	b) reference members: References **must** be initialised when the object is created.
 ```cpp
 class A {
     const int x;
@@ -137,7 +137,7 @@ explicit BankAccount(int b) : balance(b) {}
 
 Pre-req: **A shallow copy** shares the underlying dynamic memory, while **a deep copy** creates a completely independent copy of that memory.
 
-When you do `Account a = b;`,  it every variable from `b` to `a` byte-by-byte
+When you do `Account a = b;`,  it copies every variable from `b` to `a` byte-by-byte
 - **Primitive variables (`int`, `double`):** This is fine.
 - **Pointers:** This is a **DISASTER**, as it results in a shallow copy
 	If `b` has a pointer to a heap array, `a` copies the _address_. Now both `a` and `b` point to the same memory.

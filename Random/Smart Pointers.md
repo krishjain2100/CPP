@@ -1,7 +1,7 @@
 ### Related
 - [[Ownership]]
 - [[Move Semantics]]
-- [[Const Keyword]]
+- [[Const]]
 - [[Value Categories]]
 
 (in the memory library)

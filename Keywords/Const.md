@@ -1,5 +1,5 @@
 ### Related
-- [[Static Keyword]]
+- [[Static]]
 - [[Smart Pointers]]
 - [[Ownership]]
 - [[Templates]]
@@ -14,7 +14,6 @@ const int maxScore = 100;
 ```
 
 ---
-
 ### 2. Const and Pointers
 (Avoid mixing const and pointers, you'll rarely encounter it ~ Akshat Jha)
 
@@ -164,7 +163,7 @@ int main() {
 ### 9. `constexpr`
 
 **Why it exists:**
-- Replace template meta-programming (see - below) hacks
+- Replace template meta-programming  hacks
 - Improve readability and error messages
 - Enable zero-overhead abstractions
 
@@ -192,19 +191,18 @@ int main() {
 
 Writing code that writes code. Specifically, using numbers to change **Types**.
 
-**1. Compile-Time Dimensions:** The `dim(int x)` function works like `factorial`. It returns a square `x*x`. The slide shows:
+**1. Compile-Time Dimensions:** 
 
 ```cpp
-using Matrix = std::array<int, dim(N)>; 
+using Matrix = std::array<int, square(N)>;
 ```
 
-If `N=4`, `dim(N)` is 16. The compiler creates a `std::array<int, 16>`. This is much faster than `std::vector` because it lives on the Stack, not the Heap.
+If `N=4`, `square(N)` is 16. The compiler creates a `std::array<int, 16>`. This is much faster than `std::vector` because it lives on the Stack, not the Heap.
 
-**2. Branching Types (`std::conditional`):** This is a very cool optimiwation technique. You can choose different variable types based on a number size.
+**2. Branching Types (`std::conditional`):** This is a very cool optimisation technique. You can choose different variable types based on a number size.
 - **Scenario:** You have a number `N`.
 - If `N < 8`, it fits in a small byte (`uint8_t`).
 - If `N >= 8`, you need a big integer (`uint64_t`).
-
 
 ```cpp
 template <size_t N>
@@ -212,9 +210,9 @@ struct Storage {
     // std::conditional is a compile-time "if statement" for TYPES.
     // Format: conditional< Boolean, TypeIfTrue, TypeIfFalse >
     using type = std::conditional_t<
-        (N < 8),       // Condition
-        uint8_t,       // Result if True
-        uint64_t       // Result if False
+        (N < 8), // Condition
+        uint8_t, // Result if True
+        uint64_t, // Result if False
     >;
 };
 ```

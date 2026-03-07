@@ -2,7 +2,7 @@
 ### Related
 - [[Smart Pointers]]
 - [[Move Semantics]]
-- [[Const Keyword]]
+- [[Const]]
 - [[Value Categories]]
 
 **Ownership = responsibility for the resource’s lifetime.**

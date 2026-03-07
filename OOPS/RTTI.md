@@ -1,7 +1,7 @@
 ### Related
 - [[Polymorphism]]
 - [[Inheritance]]
-- [[Static Keyword]]
+- [[Static]]
 - [[Qt Development]]
 
 RTTI stands for **Run-Time Type Information**.

@@ -1,7 +1,6 @@
-
 ### Related
 - [[Move Semantics]]
-- [[Noexcept keyword]]
+- [[Noexcept]]
 - [[Templates]]
 - [[Ownership]]
 

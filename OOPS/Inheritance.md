@@ -18,7 +18,7 @@ The mode can be **`public`**, **`protected`**, or **`private`**.
 	Syntax: `class Child : protected Parent`
 	    - `public` members in Parent $\rightarrow$ become **`protected`** in Child.
 	    - `protected` members in Parent $\rightarrow$ remain `protected` in Child.
-	- **Result:** Objects of `Child` cannot access `Parent`'s public functions anymore. Only `Child` and its _own_ children can use them.
+	- **Result:** Objects of `Child` cannot access `Parent`'s public functions anymore. Only `Child` class and its _own_ children can use them.
     
  3. **Private Inheritance** 
 	Syntax: `class Child : private Parent` (Default for `class`)

@@ -1,4 +1,3 @@
-
 ### Related
 - [[Inheritance]]
 - [[RTTI]]
@@ -191,7 +190,7 @@ int main() {
 **Step 1: Setup (Compile Time)**
 - Compiler creates **V-Table for Base**: `[ &Base::speak ]`
 - Compiler creates **V-Table for Derived**: `[ &Derived::speak ]`
-- 
+
 **Step 2: Creation (Runtime)**
 - `new Derived()` creates an object.
 - It sets the hidden `__vptr` inside that object to point to the **Derived V-Table**.
@@ -223,7 +222,6 @@ class Derived : public Base<Derived> { ... };
 **Question**: How can `Derived` inherit from `Base<Derived>` if `Derived` isn't fully defined yet?
 **The Answer:** C++ allows this because at the point of inheritance, `Derived` is an "incomplete type," but that is enough for the compiler to set up the inheritance relationship.
 
----
 ####  How it Works 
 
 In a normal virtual function, the program looks at a hidden table (v-table) at runtime to find the right function.
@@ -259,7 +257,6 @@ int main() {
 ```
 
 ---
-
 #### CRTP vs. Virtual Functions 
 
 | **Feature**      | **Virtual Functions (Dynamic)**             | **CRTP (Static)**                                     |

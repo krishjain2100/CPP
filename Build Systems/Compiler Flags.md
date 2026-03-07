@@ -2,7 +2,7 @@
 - [[Makefile]]
 - [[Shell Scripts]]
 - [[CMake]]
-- [[Noexcept keyword]]
+- [[Noexcept]]
 
 Using g++ tells the computer to compile the files and link them to generate a final executable called a.out (unless you use -o flag to give a name to this executable).
 

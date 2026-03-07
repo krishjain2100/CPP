@@ -1,7 +1,7 @@
 ### Related
 - [[Scope Resolution]]
-- [[Static Keyword]]
-- [[Enumerations]]
+- [[Static]]
+- [[Enum]]
 - [[Qt Development]]
 
 **Why Use Namespaces?**

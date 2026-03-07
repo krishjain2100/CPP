@@ -1,9 +1,9 @@
 
 ### Related
-- [[Namespaces]]
+- [[Namespace]]
 - [[Inheritance]]
-- [[Enumerations]]
-- [[Static Keyword]]
+- [[Enum]]
+- [[Static]]
 
 The **Scope Resolution Operator** is the double colon `::`.
 
