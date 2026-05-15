@@ -15,10 +15,10 @@
 
 ```cpp
 // File: helper.cpp
-// OLD WAY 
+// OLD WAY
 static void internalHelper() { ... }
 
-// NEW WAY 
+// NEW WAY
 namespace {
     void internalHelper() { 
         // Only visible in helper.cpp
@@ -65,10 +65,13 @@ int main() {
 }
 ```
 
-### 4. `using` - The Good, The Bad, and The Ugly
+### `using`
 
 `using namespace std;` is generally bad in global scope, but there are nuances.
+
 - **Bad:** `using namespace std;` (Global scope). Pollution.
+
 - **Good:** `using std::cout;` (Specific). Only imports what you need.
+
 - **Very Bad:** Putting `using namespace ...` inside a **Header File (`.h`)**.
-	- If you do this in `myHeader.h`, any file which does `#include "myHeader.h"` gets their code polluted with that namespace.
+	If you do this in `myHeader.h`, any file which does `#include "myHeader.h"` gets their code polluted with that namespace.

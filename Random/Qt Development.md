@@ -10,7 +10,7 @@ Standard C++ is designed for raw performance. Once you compile your code, class 
 
 - **Standard C++:** "I call the function at memory address `0x1234`."
 - **Qt Needs:** "I want to connect the 'Button Click' event to the function named 'onOpenFiles'."
-    
+
 Standard C++ **cannot** look up a function by its string name at runtime. It doesn't know what "onOpenFiles" is anymore.
 
 #### 2. The Solution: The MOC (Code Generator)

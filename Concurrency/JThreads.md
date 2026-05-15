@@ -1,0 +1,74 @@
+
+As we discussed, if a `std::thread` goes out of scope while `joinable() == true`, it calls `std::terminate()` and crashes the program.
+
+`std::jthread` fixes this by making the destructor safe. When a `std::jthread` goes out of scope, its destructor does this exact sequence:
+
+
+```cpp
+if (joinable()) {
+    request_stop(); // We will cover this in point #2
+    join();         // Safely block and wait for it to finish
+}
+```
+
+Exception Safety: If you spawn a thread and an exception is thrown before you reach `.join()`, your program will no longer crash. The stack unwinds, the `jthread` destructor runs, it waits for the OS thread to finish cleanly, and the exception is handled normally.
+
+---
+### 2. Stop Tokens
+
+Before C++20, if you wanted to tell a background thread to stop running, you had to manually create an `std::atomic<bool> keep_running` variable, pass it to the thread, and check it in a loop. 
+
+`std::jthread` builds this directly into the language using a mechanism called a **Stop Token** (`std::stop_token`).
+
+How it works
+1. You cannot forcefully "kill" a thread from the outside. That leaves memory locked or corrupted. Cancellation must be **cooperative**.
+2. When you create a `jthread`, it creates a hidden, thread-safe communication channel.
+3. If your thread function accepts a `std::stop_token` as its first argument, the `jthread` will automatically pass it in.
+4. You can call `.request_stop()` manually from the main thread too, which flips the token's state.
+
+---
+### Example
+
+```cpp
+#include <iostream>
+#include <thread>
+#include <chrono>
+
+// Notice the first argument: std::stop_token
+void backgroundWorker(std::stop_token stoken, int id) {
+    std::cout << "Worker " << id << " starting.\n";
+
+    // The thread must periodically check if it has been asked to stop
+    while (!stoken.stop_requested()) {
+        std::cout << "Working...\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    std::cout << "Worker " << id << " detected stop request. Cleaning up and exiting.\n";
+}
+
+int main() {
+    std::cout << "Main: Spawning thread.\n";
+    
+    // The jthread automatically passes the stop_token to the function
+    std::jthread worker(backgroundWorker, 42);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::cout << "Main: Ending scope. Destructor will run.\n";
+    
+} // <-- Scope ends here. 
+  // 1. worker.~jthread() runs.
+  // 2. It automatically calls worker.request_stop()
+  // 3. It automatically calls worker.join()
+```
+
+**The Output Sequence:**
+
+1. Main spawns the thread.
+2. Worker prints "Working..." about 4 times (taking 2 seconds).
+3. Main hits the `}` and the `jthread` destructor fires.
+4. The destructor automatically triggers the `stop_requested()` flag.
+5. The `while` loop inside the worker evaluates to `false` and breaks.
+6. The worker cleans up and finishes.
+7. The `join()` inside the destructor completes, and the program exits cleanly.
+
+---

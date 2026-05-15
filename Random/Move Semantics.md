@@ -1,4 +1,3 @@
-
 ### Related
 - [[Value Categories]]
 - [[Noexcept]]

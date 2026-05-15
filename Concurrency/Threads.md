@@ -1,0 +1,198 @@
+### Process vs. Thread
+
+- **A Process is a Container.** When you run your C++ program, the Operating System (OS) creates a Process. It gives this process a chunk of RAM, a heap, a list of open files, and global variables. A process _does not execute code_; it just holds the resources.
+    
+- **A Thread is the Execution Unit.** A thread is the actual "finger" reading your compiled instructions and executing them line by line.
+---
+### Anatomy of a Thread (The Memory Layout)
+
+**SHARED**: because threads live inside the same Process, they share:
+
+1. **The Heap:** Any memory allocated with `new` or `std::make_shared`.
+2. **Global / Static Variables:** Data living outside functions.
+3. **Code Segment:** The actual compiled binary instructions.
+4. **File Descriptors:** Open network sockets or text files.
+
+**PRIVATE:** Every thread gets its own personal set of these two things:
+
+1. **The Stack:** When a thread calls a function, its local variables (like `int x = 5;`) are pushed onto its _personal_ stack. Thread A cannot accidentally overwrite Thread B's local variables (unless Thread A passes a pointer to its stack, which is a nightmare).
+
+2. **CPU Registers & Program Counter:** The OS remembers exactly which line of code _this specific thread_ is on, and what data it is currently holding in the CPU's raw hardware registers.
+---
+
+### The OS Scheduler
+
+You do not control when your threads run. **The Operating System does.**
+
+Your laptop might have a CPU with 8 physical cores. But your OS might have 2,000 currently active (Spotify, Chrome, your C++ program, background tasks).
+
+**How does 8 cores run 2,000 threads?** Through a system called **Context Switching**, managed by the OS Scheduler.
+
+1. The OS puts your thread on a CPU core.
+2. Your thread runs for a tiny slice of time (e.g., 1 millisecond).
+3. The OS violently interrupts your thread. It copies all the CPU registers and the Program Counter into memory. (This is called "Context Save").
+4. The OS loads another thread onto that core.
+5. A few milliseconds later, the OS puts your thread back on a core (maybe even a _different_ core) and restores the registers. Your thread wakes up and continues running, completely unaware it was ever paused.
+
+_Takeaway:_ Your threads are constantly waking up, pausing, and jumping between CPU cores. You can never assume Thread A will finish before Thread B, even if Thread A started first.
+
+---
+
+### `std::thread` in C++
+
+A `std::thread` object is simply a **C++ wrapper around an OS Thread** (POSIX threads on Linux/Mac, or Windows Threads). 
+When you create a `std::thread` object on your stack, it asks the OS to spawn a real thread.
+
+
+```cpp
+#include <thread>
+#include <iostream>
+
+void doWork() {
+    std::cout << "Thread is working!\n";
+}
+
+int main() {
+    // 1. Create a C++ thread object. 
+    // This immediately spawns an OS thread and starts running 'doWork'.
+    std::thread worker(doWork); 
+    
+    // ... main thread continues doing other things ...
+}
+```
+
+---
+### Issues
+
+#### 1. Out of scope
+
+`joinable()` is a boolean state flag inside the C++ `std::thread` object, indicating whether this C++ object  is currently linked to an active OS thread?
+
+- **When is it `true`?** The moment you pass a function to a thread (e.g., `std::thread t(myFunction);`), the OS thread starts, and `t.joinable()` becomes `true`. It remains `true` even if `myFunction` finishes running.
+
+- **When is it `false`?** It is ONLY `false` in three specific scenarios:
+    1. You created an empty thread: `std::thread t;` (No function passed yet).
+    2. You explicitly called `t.join();`. (The link is severed after waiting).
+    3. You explicitly called `t.detach();`. (The link is severed, OS thread runs independently).
+
+What happens when the scope in which thread t is defined ends?
+
+```cpp
+void myTask() {
+    // thread does some quick math
+}
+
+void launchThread() {
+    // Scope of launchThread begins
+
+    std::thread t(myTask); 
+    // OS thread spawns. t.joinable() is now TRUE.
+
+    // ... we do not call t.join() or t.detach() ...
+
+} // <-- Scope of launchThread ends here.
+```
+
+Here is the exact sequence of events when the CPU hits that closing `}`:
+1. C++ looks at the stack for `launchThread` and sees the local variable `t`.
+2. C++ calls the destructor: `~thread()`.
+3. Inside `~thread()`, the C++ standard library executes a check:
+
+```cpp
+if (this->joinable() == true) {
+	std::terminate(); 
+}
+```
+
+4. Because we never called `join()` or `detach()`, `joinable()` is still `true`.
+5. `std::terminate()` is called.
+6. The OS forcibly kills the entire process immediately. No other code runs. No other destructors run. The program crashes.
+
+Why have this?
+
+The C++ standard committee wrote the `~thread()` destructor this way to prevent silent memory corruption.
+
+If `launchThread` ended and C++ just quietly destroyed the `t` object while the OS thread was still running `myTask()`, that OS thread would become an "orphan." If `myTask()` tried to access variables that used to exist in `launchThread` (e.g., passed by reference), it would read deleted memory, causing undefined behavior and silent data corruption.
+
+To prevent you from accidentally creating orphan threads that corrupt memory, C++ enforces a strict rule: **You must explicitly sever the link (via `join` or `detach`) before the C++ object ceases to exist.**
+
+
+#### 2. Exceptions
+
+```cpp
+void processData() {
+    std::thread t(backgroundTask); // 1. Thread starts running
+    
+    // 2. We do some work in the main thread
+    doSomeMath(); 
+    allocateMemory(); // <-- WHAT IF THIS THROWS AN EXCEPTION?
+    
+    // 3. We responsibly put our join here.
+    t.join(); 
+} // 4. Scope ends.
+```
+
+If `allocateMemory()` throws an exception, **execution immediately jumps out of the function** to look for a `catch` block. Because of this jump, **`t.join()` is completely skipped.**
+
+1. The exception is thrown.
+2. C++ starts "stack unwinding" (destroying local variables to clean up).
+3. It destroys `t`.
+4. The `~thread()` destructor runs.
+5. The destructor checks: _"Did they call `join()` or `detach()`?"_
+6. Answer: **No** (because the exception made us skip that line).
+7. Result: **`std::terminate()` is called. The program crashes.**
+
+Instead of your program catching the exception and handling the memory error gracefully, your entire application is instantly killed by the OS.
+
+To write tsafe code with `std::thread`, you had to write ugly boilerplate like this everywhere to ensure the thread was joined no matter what:
+
+```cpp
+void processData() {
+    std::thread t(backgroundTask);
+    try {
+        doSomeMath();
+        allocateMemory();
+    } catch (...) {
+        t.join(); // Catch the error JUST to join the thread
+        throw;    // Re-throw the error so the rest of the program knows
+    }
+    t.join(); // Join for the normal, non-error path
+}
+```
+
+This was solved by [[JThreads]] in C++20.
+
+---
+### Example
+
+```cpp
+#include <iostream>
+#include <thread>
+
+// The function the new thread will run
+void printGreeting(int id) {
+    std::cout << "Hello from thread ID: " << id << "\n";
+}
+
+int main() {
+    std::cout << "Main thread starting...\n";
+
+    // Spawn a thread, passing the function and its arguments
+    std::thread t1(printGreeting, 1);
+    std::cout << "Main thread doing other work...\n"; 
+    // The twp print statements order is not guaranteed.
+
+    // WE MUST JOIN. 
+    // This pauses 'main' until 't1' finishes its function.
+    t1.join(); 
+
+    std::cout << "Main thread ending safely.\n";
+    return 0;
+}
+```
+
+### RAII
+The core promise of RAII (Resource Acquisition Is Initialization) is: 
+**The destructor is responsible for safely cleaning up the resource.** If you open a file (`std::ifstream`), its destructor closes it. If you allocate a smart pointer (`std::unique_ptr`), its destructor frees the memory. You do not have to manually call `.close()` or `.free()`. RAII makes cleanup automatic and error-proof.
+
+`std::thread` breaks this promise entirely. Instead of its destructor safely cleaning up the OS thread (by joining or detaching it), the `std::thread` destructor essentially says: _"If you did not manually clean this up yourself before I got here, I am going to crash the program."_

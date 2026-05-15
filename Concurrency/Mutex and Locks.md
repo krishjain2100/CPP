@@ -1,0 +1,164 @@
+### 1. The Data Race
+
+Imagine `counter++`. In C++, this looks like one operation. At the CPU level, it is actually three instructions:
+
+1. **READ** the value from RAM into a CPU register.
+2. **INCREMENT** the register.
+3. **WRITE** the register back to RAM.
+
+If Thread A and Thread B both read the counter when it's `10`, they both increment it to `11`, and both write `11` back. You just did two increments, but the counter only went up by 1. Data is lost.
+
+---
+### 2. `std::mutex` (Mutual Exclusion)
+
+A Mutex is a lock. Only one thread can hold the lock at a time. If another thread wants the lock, it must go to sleep and wait until the first thread releases it.
+
+
+```cpp
+#include <mutex>
+
+int counter = 0;
+std::mutex mtx;
+
+void increment() {
+    mtx.lock();   // Thread acquires the lock
+    counter++;    // SAFE: Only one thread can be here at a time (Critical Section)
+    mtx.unlock(); // Thread releases the lock
+}
+```
+
+Just like `std::thread` failing to join, calling `.lock()` and `.unlock()` manually is a disaster waiting to happen. If `counter++` throws an exception, `.unlock()` is skipped, and every other thread waiting for that lock is frozen forever.
+
+Instead, you use **RAII Wrappers**.
+
+#### A. `std::lock_guard` (The Default)
+
+This is a lightweight, scope-based lock. It locks the mutex in its constructor and unlocks it in its destructor.
+
+```cpp
+void incrementSafely() {
+    // 1. Lock is acquired instantly
+    std::lock_guard<std::mutex> lock(mtx); 
+    
+    counter++; 
+    
+    // 2. Scope ends. Destructor ~lock_guard runs.
+    // 3. Mutex is safely unlocked, even if an exception was thrown!
+}
+```
+
+#### B. `std::unique_lock` (The Flexible One)
+
+`std::lock_guard` is great, but it locks _immediately_ and cannot be unlocked early. If you have a massive function, locking the whole thing ruins performance. `std::unique_lock` allows manual control while still guaranteeing RAII cleanup.
+
+
+```cpp
+void complexTask() {
+    // std::defer_lock tells it NOT to lock right away
+    std::unique_lock<std::mutex> uLock(mtx, std::defer_lock); 
+    
+    doSomeNonSharedWork(); // No lock needed here (Fast)
+    
+    uLock.lock(); // Manually lock
+    counter++;    // Critical section
+    uLock.unlock(); // Manually unlock early so other threads can proceed!
+    
+    doMoreNonSharedWork();
+    
+} // If we forgot to unlock, ~unique_lock handles it here.
+```
+
+---
+### 3. Deadlocks
+
+```cpp
+#include <mutex>
+#include <iostream>
+#include <thread>
+
+struct Account {
+    int balance;
+    std::mutex mtx;
+};
+
+void transfer(Account& from, Account& to, int amount) {
+    // 1. Lock the sender's account
+    std::lock_guard<std::mutex> lock1(from.mtx);
+
+    // 2. Lock the receiver's account
+    std::lock_guard<std::mutex> lock2(to.mtx);
+    
+    // 3. Do the math
+    from.balance -= amount;
+    to.balance += amount;
+}
+```
+
+
+- **Thread 1:** `transfer(Alice, Bob, 50);`
+- **Thread 2:** `transfer(Bob, Alice, 20);`
+
+What happens
+
+1. **Thread 1** locks Alice's mutex. (Success)
+2. **Thread 2** locks Bob's mutex. (Success)
+3. **Thread 1** tries to lock Bob's mutex. It is already locked by Thread 2, so Thread 1 goes to sleep to wait.
+4. **Thread 2** tries to lock Alice's mutex. It is already locked by Thread 1, so Thread 2 goes to sleep to wait.
+
+**Result:** Both threads are asleep, waiting for the other to release the lock.  Your program is deadlocked.
+
+---
+
+### 4. `std::scoped_lock` (C++17)
+
+The only way to mathematically guarantee deadlocks never happen when acquiring multiple locks is to **always lock them in the exact same order**, regardless of the order the user passed them into the function.
+
+```cpp
+void transfer(Account& from, Account& to, int amount) {
+    // 1. Lock BOTH accounts simultaneously and safely
+    std::scoped_lock lock(from.mtx, to.mtx);
+    
+    // 2. Do the math
+    from.balance -= amount;
+    to.balance += amount;
+    
+} // 3. Scope ends. Both mutexes are automatically unlocked.
+```
+
+Mechanism: 
+
+It takes any number of mutexes (it is a variadic template). When you pass `from.mtx` and `to.mtx` to it, it does not just lock them left-to-right.
+
+Under the hood, it uses a **deadlock-avoidance algorithm** (often implemented by looking at the raw memory addresses of the mutexes). 
+
+1. It looks at the memory address of `from.mtx` and `to.mtx`.
+2. It sorts them.
+3. It locks the one with the lowest memory address _first_.
+4. It locks the one with the highest memory address _second_.
+
+Because memory addresses are a universal constant in your program, **Thread 1 and Thread 2 will now ALWAYS lock the mutexes in the exact same order**, regardless of whether Alice or Bob is passed as the first argument.
+
+One thread gets Alice. The other thread waits. Deadlock completely averted.
+
+**Why not always memory addresses?** Because sorting dynamic numbers of addresses is slow and complex at the hardware level.
+
+---
+
+If you are working in an older codebase, you have to use a slightly uglier two-step process: `std::lock` (a standalone function that runs the deadlock-avoidance algorithm) combined with `std::unique_lock` (using the `std::adopt_lock` flag so it doesn't try to lock them a second time).
+
+
+```cpp
+void transfer(Account& from, Account& to, int amount) {
+    // 1. Lock them safely using the algorithm
+    std::lock(from.mtx, to.mtx); 
+    
+    // 2. Wrap them in RAII so they unlock when the scope ends
+    // adopt_lock means "I already locked this, just manage the unlocking"
+    std::unique_lock<std::mutex> lock1(from.mtx, std::adopt_lock);
+    std::unique_lock<std::mutex> lock2(to.mtx, std::adopt_lock);
+    
+    from.balance -= amount;
+    to.balance += amount;
+}
+```
+---

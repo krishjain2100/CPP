@@ -87,7 +87,7 @@ It is different from:
 
 - **Safety Check:** It checks if a conversion is _sensible_.
     - `int` to `float`? **Yes.**
-    - `Base*` to `Child*`? **Yes.**
+    - Child*` to `Base*`? **Yes.**
     - `std::string` to `int`? **No** (Compile Error).
     - `UnrelatedClassA*` to `UnrelatedClassB*`? **No** (Compile Error).
 

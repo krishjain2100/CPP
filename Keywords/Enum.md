@@ -10,6 +10,7 @@ An **Enum** is a user-defined data type that consists of a set of named integer 
 There are two types of Enums in C++:
 1. **Un-scoped Enums** (Old C-Style).
 2. **Scoped Enums** (Modern `enum class`).
+
 ---
 ### Un-scoped Enums
 

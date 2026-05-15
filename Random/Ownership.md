@@ -45,6 +45,7 @@ int main() {
 
 ---
 ### Example 2: **Pointer does NOT own lifetime either**
+
 ```cpp
 int main() {
     X* p = new X;
@@ -63,6 +64,7 @@ Pointers are just addresses.
 
 ---
 ### Example 3: **Object owns its own lifetime (stack)**
+
 ```cpp
 int main() {
     X x;
