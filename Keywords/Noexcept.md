@@ -1,7 +1,7 @@
 ### Related
 - [[Move Semantics]]
 - [[Value Categories]]
-- [[Compiler Flags]]
+- [[1. Compiler Flags]]
 - [[Templates]]
 
 `noexcept` is a specifier you put on a function signature.

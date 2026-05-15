@@ -1,6 +1,6 @@
 ### Related
-- [[CMake]]
-- [[Makefile]]
+- [[4. CMake]]
+- [[2. Makefile]]
 - [[RTTI]]
 - [[Namespace]]
 
