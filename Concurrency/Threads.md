@@ -191,6 +191,7 @@ int main() {
 }
 ```
 
+---
 ### RAII
 The core promise of RAII (Resource Acquisition Is Initialization) is: 
 **The destructor is responsible for safely cleaning up the resource.** If you open a file (`std::ifstream`), its destructor closes it. If you allocate a smart pointer (`std::unique_ptr`), its destructor frees the memory. You do not have to manually call `.close()` or `.free()`. RAII makes cleanup automatic and error-proof.

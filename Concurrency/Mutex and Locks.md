@@ -143,6 +143,7 @@ One thread gets Alice. The other thread waits. Deadlock completely averted.
 **Why not always memory addresses?** Because sorting dynamic numbers of addresses is slow and complex at the hardware level.
 
 ---
+### Before C++17
 
 If you are working in an older codebase, you have to use a slightly uglier two-step process: `std::lock` (a standalone function that runs the deadlock-avoidance algorithm) combined with `std::unique_lock` (using the `std::adopt_lock` flag so it doesn't try to lock them a second time).
 
@@ -161,4 +162,41 @@ void transfer(Account& from, Account& to, int amount) {
     to.balance += amount;
 }
 ```
+
+1. **`std::lock(from.mtx, to.mtx);`**
+    - This is a standalone function. It successfully locks both mutexes without deadlocking.
+    - **The Flaw:** It is just a function. It has no destructor. If `from.balance -= amount;` throws an exception, the mutexes will remain locked forever because there is no RAII object to clean them up.
+    
+2. **`std::unique_lock<std::mutex> lock1(...)`**
+    - This is our RAII wrapper. Its whole purpose is to guarantee `unlock()` is called when the scope ends.
+    - **The Flaw:** Normally, when you create a `unique_lock`, it immediately tries to `.lock()` the mutex. But `std::lock` _already_ locked it! If `unique_lock` tries to lock an already-locked standard mutex, your program invokes undefined behavior (usually freezing instantly).
+    
+3. **`std::adopt_lock`**
+    - This is the bridge. It is an empty tag (a flag) you pass into the constructor.
+    - It tells the `unique_lock`: _"Listen, I have already locked this mutex manually. Do not try to lock it again. Just 'adopt' it (take ownership of it), so that your destructor will unlock it for me later."_
+
+---
+
+### Try and Backoff
+
+Instead of sorting memory addresses, many major C++ standard library implementations (like GCC's `libstdc++`) use a highly optimised algorithm called **Smart Backoff** (or "Lock and Try").
+
+Here is the exact state machine of what `std::lock(A, B)` usually does:
+
+1. **Lock Mutex A** (Blocking wait until it gets it).
+
+2. **Call `B.try_lock()`**. (`try_lock` does not go to sleep. It just asks: "Is it available?" and returns `true` or `false` instantly).
+
+3. **If `try_lock` returns `true`**: Success! We have both locks. Proceed.
+
+4. **If `try_lock` returns `false`**:
+
+    - Uh oh. Someone else holds Mutex B.
+    - If we wait for B, we might deadlock.
+    - **The Backoff:** We immediately **UNLOCK Mutex A**.
+    - We yield the thread (let the OS run someone else for a microsecond).
+    - We start over, but this time we try to lock Mutex B first, and then `try_lock` Mutex A.
+
+**Will have to think harder as to why this works**
+
 ---
