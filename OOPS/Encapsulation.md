@@ -1,9 +1,3 @@
-### Related
-- [[Inheritance]]
-- [[Polymorphism]]
-- [[Const]]
-- [[Static]]
-
 ### **Constructor** 
 must be public, along with destructor
 
@@ -126,6 +120,8 @@ int main() {
     printBal(50); // VALID?!// C++ created a temporary account with balance 50. 
 }
 ```
+It invisibly translates `printBal(50);` into `printBal(BankAccount(50));`.
+It takes your raw integer, allocates temporary memory on the stack for a `BankAccount` object, feeds your `50` into that constructor, and then passes that temporary object into the function.
 
 **The Fix:** Always put `explicit` in front of single-argument constructors.
 ```cpp
@@ -141,7 +137,7 @@ When you do `Account a = b;`,  it copies every variable from `b` to `a` byte-by-
 - **Primitive variables (`int`, `double`):** This is fine.
 - **Pointers:** This is a **DISASTER**, as it results in a shallow copy
 	If `b` has a pointer to a heap array, `a` copies the _address_. Now both `a` and `b` point to the same memory.
-	- `b` dies $\rightarrow$ deletes the memory.
+	- `b` dies $\rightarrow$ deletes the memory (if destructor of `Account` is programmed to do so).
 	- `a` dies $\rightarrow$ deletes the _same_ memory again.
 	- **Result:** Double Free Error (Crash).
 
@@ -198,7 +194,7 @@ ArrayWrapper& operator=(const ArrayWrapper& other) {
 
 ---
 ### **Rule of Three**
-If your class manages a resource (like a raw pointer) and needs a custom Destructor, you almost certainly need a Copy Constructor and a Copy Assignment Operator too, just to avoid double free crashes.
+If your class manages a resource (like a raw pointer) and needs a custom Destructor, you almost certainly need a Copy Constructor and a Copy Assignment Operator too, just to avoid double free crashes and memory leaks.
 
 ---
 ### Abstract Classes
@@ -232,7 +228,7 @@ int main() {
 }
 ```
 
-The compiler-generated destructor (in case you forget to write one) is **NOT `virtual`** by default. This is dangerous for Abstract Classes because they are almost always used via base pointers (`Shape* s = new Circle();`). So remember to write one yourself
+The compiler-generated destructor (in case you forget to write one) is **NOT `virtual`** by default. This is dangerous for Abstract Classes because they are almost always used via base pointers (`Shape* s = new Circle();`). So, when we call `delete s`, it will call the default destructor of `Shape` leading to memory leaks. So remember to write a virtual destructor in the base class because then the compiler is required to go to the RAM to figure out what the `Shape` instance actually is (in this case, Circle), and then call that particular destructor. (More on the figuring out the actual type part under Polymorphism).
 
 ---
 
@@ -259,6 +255,8 @@ void printWidth(Box b) {
     cout << "Width: " << b.width << endl;
 }
 ```
+
+You can implement `printWidth` inside the `Box` class body itself, but it would still be treated as a global function (proof of this is that, even then `this` pointer won't be available inside `printWidth`)
 
 ---
 
@@ -304,11 +302,34 @@ class Person {
 public:
     Person(string n) : name(n) {}
     // Friend declaration
-    friend ostream& operator<<(ostream& os, const Person& p);
+    friend ostream& operator<<(ostream& os, const Person& p) {
+		os << "Person(" << p.name << ")";
+	    return os;
+	    // We return 'ostream&' to allow chaining: cout << p1 << p2;
+    }
 };
-// We return 'ostream&' to allow chaining: cout << p1 << p2;
-ostream& operator<<(ostream& os, const Person& p) {
-    os << "Person(" << p.name << ")";
-    return os;
-}
 ```
+
+The C++ compiler treats every single operator as a standard function call.
+
+When the compiler sees a binary operator (like `+` or `<<`), it first looks at the object on the **left**. If you write `v1 + v2`, `v1` is on the left. The compiler translates this into a member function call: `v1.operator+(v2)`. The left object owns the function.
+
+Now look at printing: `cout << myPerson`. Because `cout` is on the left, the compiler tries to translate it to: `cout.operator<<(myPerson)`.
+
+For this to work, you would have to open the official C++ Standard Library source code, find the `std::ostream` class (which is the blueprint for `cout`), and type your custom method into it. Because you cannot edit the C++ Standard Library, a member function is impossible.
+
+Because the compiler cannot find a method inside `cout`, its fallback plan is to look for a **standalone, global function** that takes _both_ objects as arguments. `cout << myPerson`
+is converted to `operator<<(cout, myPerson)`
+
+- **Argument 1 (`ostream& os`):** We must pass it by reference (`&`) because `cout` is tied to the physical hardware of the console screen, you cannot create a "copy" of a hardware stream in RAM.
+
+- **Argument 2 (`const Person& p`):** The compiler passes `myPerson` into this slot.
+
+If you write `cout << p1 << p2;`, the compiler evaluates it left-to-right:
+
+1. It executes the first half: `operator<<(cout, p1)`.
+2. The function prints `p1`'s name, and then **returns `cout`**.
+3. Because it returned `cout`, the line of code physically resolves to `cout << p2;`.
+4. It then executes the second half: `operator<<(cout, p2)`.
+
+---
