@@ -414,4 +414,319 @@ int main() {
 6. **`Soul` Variables (ID: 999)** _(Shared Virtual Base 1)_
 7. **`Body` Variables (ID: 888)** _(Shared Virtual Base 2)_
 
+
+**Note:** There is another issue with multiple inheritance that `Mom` and `Dad` may have some member/method with the same name, so when we call `child.x`, we do `child.Mom::x` to be explicit, or else compiler throws ambiguity error at compile time.
+
+**Is multiple inheritance more trouble than it’s worth?**
+Most of the problems that can be solved using multiple inheritance can be solved using single inheritance as well. Many object-oriented languages (eg. Smalltalk, PHP) do not even support multiple inheritance. The driving idea behind disallowing multiple inheritance in these languages is that it simply makes the language too complex, and ultimately causes more problems than it fixes.
+
+---
+### Calling inherited functions and overriding behaviour
+
+It is possible to have our derived function call the base version of the function of the same name (in order to reuse code) and then add additional functionality to it. We mention this because `identify()` inside `Derived` is completely hiding the `identify()` inside `Base` for any `Derived` object.
+
+```cpp
+class Base {
+public:
+    Base() { }
+    void identify() const { std::cout << "Base::identify()\n"; }
+};
+class Derived: public Base {
+public:
+    Derived() { }
+    void identify() const {
+        std::cout << "Derived::identify()\n";
+        Base::identify(); // note call to Base::identify() here
+        // identify() // would lead to recursion
+    }
+};
+
+int main() {
+    Base base {};
+    base.identify();
+    Derived derived {};
+    derived.identify();
+}
+// This prints:
+// Base::identify()
+// Derived::identify()
+// Base::identify()
+```
+
+
+There’s one bit of trickiness that we can run into when trying to call friend functions in base classes, such as `operator<<`. Because friend functions of the base class aren’t actually part of the base class, using the scope resolution qualifier won’t work. Instead, we need a way to make our `Derived` class temporarily look like the `Base` class so that the right version of the function can be called. Fortunately, that’s easy to do, using `static_cast`. Here’s an example:
+
+```cpp
+class Base {
+public:
+    Base() { }
+	friend std::ostream& operator<< (std::ostream& out, const Base&) {
+		out << "In Base\n";
+		return out;
+	}
+};
+
+class Derived: public Base {
+public:
+    Derived() { }
+ 	friend std::ostream& operator<< (std::ostream& out, const Derived& d) {
+		out << "In Derived\n";
+		out << static_cast<const Base&>(d);
+		return out;
+    }
+};
+
+int main() {
+    Derived derived {};
+    std::cout << derived << '\n';
+}
+
+// This prints:
+// In Derived
+// In Base
+```
+
+
+#### Overriding
+The compiler will select the best matching function from the most-derived class with at least one function with that name. It will stop at the class which has atleast one matching function (say N) and then among all these N functions, it picks up the best match.
+
+
+
+```cpp
+class Base {
+public:
+    void print(int)    { std::cout << "Base::print(int)\n"; }
+    void print(double) { std::cout << "Base::print(double)\n"; }
+};
+
+class Derived: public Base {
+public:
+};
+int main() {
+    Derived d{};
+    d.print(5); // calls Base::print(int)
+}
+```
+
+For the call `d.print(5)`, the compiler doesn’t find a function named `print()` in `Derived`, so it checks `Base` where it finds two functions with that name. It uses the function overload resolution process to determine that `Base::print(int)` is a better match than `Base::print(double)`. Therefore, `Base::print(int)` gets called, just like we’d expect.
+
+Now let’s look at a case that doesn’t behave like we might expect:
+
+```cpp
+class Base {
+public:
+    void print(int)    { std::cout << "Base::print(int)\n"; }
+    void print(double) { std::cout << "Base::print(double)\n"; }
+};
+
+class Derived: public Base {
+public:
+    void print(double) { std::cout << "Derived::print(double)"; } 
+};
+
+int main() {
+    Derived d{};
+    d.print(5); // calls Derived::print(double), not Base::print(int)
+    return 0;
+}
+```
+
+For the call `d.print(5)`, the compiler finds one function named `print()` in `Derived`, therefore it will only consider functions in `Derived` when trying to determine what function to resolve to. This function is also the best matching function in `Derived` for this function call. Therefore, this calls `Derived::print(double)`.
+
+
+So what if we actually want `d.print(5)` to resolve to `Base::print(int)`? One not-great way is to define a `Derived::print(int)`:
+`void print(int n) { Base::print(n); }` inside `Derived`
+While this works, it’s not great, as we have to add a function to `Derived` for every overload we want to fall through to `Base`. That could be a lot of extra functions that essentially just route calls to `Base`.
+
+A better option is to use a using-declaration in `Derived` to make all `Base` functions with a certain name visible from within `Derived`:
+
+```cpp
+class Base {
+public:
+    void print(int)    { std::cout << "Base::print(int)\n"; }
+    void print(double) { std::cout << "Base::print(double)\n"; }
+};
+
+class Derived: public Base {
+public:
+    using Base::print; // make all Base::print() functions eligible for overload resolution
+    void print(double) { std::cout << "Derived::print(double)"; }
+};
+
+int main() {
+    Derived d{};
+    d.print(5);
+}
+```
+
+By putting the using-declaration `using Base::print;` inside `Derived`, we are telling the compiler that all `Base` functions named `print` should be visible in `Derived`, which will cause them to be eligible for overload resolution. As a result, `Base::print(int)` is selected over `Derived::print(double)`.
+
+---
+
+### Hiding inherited functionality
+
+#### 1. **Changing an inherited member’s access level**
+
+C++ gives us the ability to change an inherited member’s access specifier in the derived class. This is done by using a _using declaration_ to identify the (scoped) base class member that is having its access changed in the derived class, under the new access specifier.
+
+For example, consider the following Base:
+
+
+
+Because Base::printValue() has been declared as protected, it can only be called by Base or its derived classes. The public can not access it.
+
+![Ezoic](https://go.ezodn.com/utilcave_com/ezoicbwa.png "ezoic")
+
+```cpp
+class Base {
+private:
+    int m_value {};
+public:
+    Base(int value) : m_value { value } {}
+protected:
+    void printValue() const { std::cout << m_value; }
+};
+
+class Derived: public Base {
+public:
+    Derived(int value) : Base { value } {}
+    // Base::printValue was inherited as protected, so the public has no access
+    // But we're changing it to public via a using declaration
+    using Base::printValue; // note: no parenthesis here
+};
+```
+
+This means that this code will work:
+
+```cpp
+int main() {
+    Derived derived { 7 };
+    derived.printValue(); // prints 7
+    return 0;
+}
+```
+
+#### 2. **Hiding functionality**
+
+In C++, it is not possible to remove or restrict functionality from a base class other than by modifying the source code. However, in a derived class, it is possible to hide functionality that exists in the base class, so that it can not be accessed through the derived class. This can be done simply by changing the relevant access specifier. 
+
+```cpp
+class Base {
+public:
+	int m_value{};
+};
+
+class Derived : public Base {
+private:
+	using Base::m_value;
+public:
+	Derived(int value) : Base { value } { }
+};
+
+int main() {
+	Derived derived{ 7 };
+	std::cout << derived.m_value; // error: m_value is private in Derived
+	Base& base{ derived };
+	std::cout << base.m_value; // okay: m_value is public in Base
+	return 0;
+}
+```
+
+This allowed us to take a poorly designed base class and encapsulate its data in our derived class. Alternatively, we could have inherited Base privately, which would have caused all of Base’s member to be inherited privately in the first place.
+
+However, it is worth noting that while `m_value` is private in the Derived class, it is still public in the Base class. Therefore the encapsulation of `m_value `in Derived can still be subverted by casting to Base& and directly accessing the member.
+
+Given a set of overloaded functions in the base class, there is no way to change the access specifier for a single overload. You can only change them all:
+
+```cpp
+class Base {
+public:
+    int m_value{};
+    int getValue() const { return m_value; }
+    int getValue(int) const { return m_value; }
+};
+
+class Derived : public Base {
+private:
+	using Base::getValue; // make ALL getValue functions private
+public:
+	Derived(int value) : Base { value } {}
+};
+
+int main() {
+	Derived derived{ 7 };
+	std::cout << derived.getValue();  // err: getValue() is priv in Derived
+	std::cout << derived.getValue(5); // err: getValue(int) is priv in Derived
+	return 0;
+}
+```
+
+#### 3. Deleting functions in the derived class
+
+You can also mark member functions as deleted in the derived class, which ensures they can’t be called at all through a derived object:
+
+```cpp
+#include <iostream>
+class Base
+{
+private:
+	int m_value {};
+
+public:
+	Base(int value) : m_value { value } {}
+	int getValue() const { return m_value; }
+};
+
+class Derived : public Base {
+public:
+	Derived(int value): Base { value } {}
+	int getValue() const = delete; // mark this function as inaccessible
+};
+
+int main() {
+	Derived derived { 7 };
+	// The following won't work because getValue() has been deleted!
+	std::cout << derived.getValue();
+	return 0;
+}
+```
+
+In the above example, we’ve marked the getValue() function as deleted. This means that the compiler will complain when we try to call the derived version of the function. Note that the Base version of getValue() is still accessible though. We can call Base::getValue() in one of two ways:
+
+```cpp
+int main() {
+	Derived derived { 7 };
+	// We can call the Base::getValue() function directly
+	std::cout << derived.Base::getValue();
+	// Or we can upcast Derived to a Base reference and getValue() will resolve to Base::getValue()
+	std::cout << static_cast<Base&>(derived).getValue();
+	return 0;
+}
+```
+
+If using the casting method, we cast to a Base& rather than a Base to avoid making a copy of the Base portion of `derived`.
+
+#### 4. Next-level Hack
+
+If a Base class has a public virtual function, and the Derived class changes the access specifier to private, the public can still access the private Derived function by casting a Derived object to a Base& and calling the virtual function. The compiler will allow this because the function is public in Base. However, because the object is actually a Derived, virtual function resolution will resolve to the (private) Derived version of the function. Access controls are not enforced at runtime.
+
+```cpp
+class A {
+public:
+    virtual void fun() {  std::cout << "public A::fun()\n"; }
+};
+
+class B : public A {
+private:
+    virtual void fun() { std::cout << "private B::fun()\n"; }
+};
+
+int main() {
+    B b {};
+    b.fun();  // compile error: not allowed as B::fun() is private
+    static_cast<A&>(b).fun(); 
+    // okay: A::fun() is public, resolves to private B::fun() at runtime
+}
+```
+
 ---
