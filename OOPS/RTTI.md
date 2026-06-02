@@ -1,5 +1,4 @@
-RTTI stands for **Run-Time Type Information**. It is a mechanism that allows the program to determine the type of an object **while the program is running**, rather than just at compile time.
-
+**Run-time type information (RTTI)** is a feature of C++ that exposes information about an object’s data type at runtime. This capability is leveraged by dynamic_cast. 
 ### Use-case
 
 Normally, C++ is a **statically typed** language. The compiler knows exactly what every variable is (an `int`, a `Car*`, a `Shape*`) before you run the code.
@@ -93,6 +92,11 @@ int main() {
 }
 ```
 
+Note that there are several cases where downcasting using dynamic_cast will not work:
+1. With protected or private inheritance.
+2. For classes that do not declare or inherit any virtual functions (and thus don’t have a virtual table).
+3. In certain cases involving virtual base classes (see [this page](https://msdn.microsoft.com/en-us/library/cby9kycs.aspx) for an example of some of these cases, and how to resolve them).
+
 #### 2. `typeid` (Type Identification)
 
 This allows you to compare types directly.
@@ -115,6 +119,6 @@ void checkType(Animal* ptr) {
 
 - **Memory:** It adds a small amount of data to every class (the `type_info` struct).
 - **Speed:** `dynamic_cast` is slow. It has to traverse the inheritance tree at runtime to check validity.
-- **Note:** You can actually turn RTTI **off** in many compilers (like `-fno-rtti` in GCC/Clang) to save memory, but then `dynamic_cast` will crash or fail to compile.
+- **Note:** Because RTTI has a pretty significant space performance cost, some compilers allow you to turn RTTI off as an optimisation ((like `-fno-rtti` in GCC/Clang)). Needless to say, if you do this, dynamic_cast won’t function correctly.
 
 ---

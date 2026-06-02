@@ -1,5 +1,5 @@
 ### **Constructor** 
-must be public, along with destructor
+constructors and destructors are not required to be public (it was all a lie)
 
 1. Assignment inside the constructor body (worse)
 	- `x` is **default-initialised** : default constructor is called   
@@ -48,10 +48,7 @@ public:
 
 ```
 
----
-
-3. **Order of initialisation**
-	Members are initialised **in the order they are declared**, NOT the order in the init list.
+3. **Order of initialisation**: Members are initialised **in the order they are declared**, NOT the order in the init list.
 
 ```cpp
 class A {
@@ -64,7 +61,6 @@ public:
 ```
 
 ---
-
 ### The Three Keywords:
 
 - **public**: Any part of the program can access public members.
@@ -197,41 +193,6 @@ ArrayWrapper& operator=(const ArrayWrapper& other) {
 If your class manages a resource (like a raw pointer) and needs a custom Destructor, you almost certainly need a Copy Constructor and a Copy Assignment Operator too, just to avoid double free crashes and memory leaks.
 
 ---
-### Abstract Classes
-
-Sometimes, a Base class is just a concept (like "Shape"). It doesn't make sense to have a "Generic Shape." You can only have a Circle, Square, etc.
-
-**Syntax:** `virtual void functionName() = 0;`
-
-**The Rules:**
-1. **No Implementation:** The Base class  has _no code_ for this function.
-2. **Mandatory Override:** Any class inheriting from this **MUST** provide the code for this function. If it doesn't, it becomes an abstract class too.
-3. **Cannot Instantiate:** You cannot create an object of a class with atleast one pure virtual function. `Shape s;` is a compiler error.
-
-```cpp
-class Shape {
-public:
-    // Pure Virtual Function
-    virtual void draw() = 0; 
-    virtual ~Shape() {}
-};
-
-class Circle : public Shape {
-public:
-    void draw() override { cout << "Drawing Circle"; }
-};
-
-int main() {
-    // Shape s; // ERROR: Cannot instantiate abstract class
-    Shape* s1 = new Circle(); // OK: Pointer to base
-    s1->draw(); // Calls Circle::draw()
-}
-```
-
-The compiler-generated destructor (in case you forget to write one) is **NOT `virtual`** by default. This is dangerous for Abstract Classes because they are almost always used via base pointers (`Shape* s = new Circle();`). So, when we call `delete s`, it will call the default destructor of `Shape` leading to memory leaks. So remember to write a virtual destructor in the base class because then the compiler is required to go to the RAM to figure out what the `Shape` instance actually is (in this case, Circle), and then call that particular destructor. (More on the figuring out the actual type part under Polymorphism).
-
----
-
 ### `friend` Keyword
 
 Sometimes you want to give **one specific outsider** access to your private data without opening it up to the whole world.
@@ -259,7 +220,6 @@ void printWidth(Box b) {
 You can implement `printWidth` inside the `Box` class body itself, but it would still be treated as a global function (proof of this is that, even then `this` pointer won't be available inside `printWidth`)
 
 ---
-
 ### Operator Overloading
 
 You can redefine how standard symbols (`+`, `-`, `==`, `<<`) work with your custom objects.

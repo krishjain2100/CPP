@@ -1,4 +1,3 @@
-
 There are **three ways** to declare a child class in C++. 
 The mode can be **`public`**, **`protected`**, or **`private`**.
 
@@ -97,43 +96,8 @@ Child Destructor 100
 Parent Destructor
 ```
 
----
-### The Virtual Destructor
+**Note:** Whenever Derived constructor is run, at the end of it, it will call the Base Destructor.
 
-When you `delete` a pointer, the compiler checks the type of the pointer.
-- If you delete an `Animal*`, the compiler calls `~Animal()`.
-- It does **not** check if the object is actually a `Dog` **UNLESS** the destructor is marked `virtual`.
-
-**The Consequence (Memory Leak):** If the destructor is not virtual, the "Child" part of the object is never cleaned up.
-
-```cpp
-class Base {
-public:
-    // WITHOUT 'virtual', this is a "Staticaly bound" function, i.e the decisions about it are taken at compile time using the provided types
-    ~Base() { cout << "Base cleaned up."; } 
-};
-
-class Derived : public Base {
-    int* heavyData;
-public:
-    Derived() { heavyData = new int[1000]; } // 1. Allocate memory
-    ~Derived() { 
-        delete[] heavyData; // 2. Free memory
-        cout << "Derived cleaned up."; 
-    }
-};
-
-int main() {
-    Base* ptr = new Derived(); // Upcasting
-    delete ptr; 
-    // Compiler sees: ptr is Base*.
-    // Compiler calls: ~Base().
-    // Compiler IGNORES: ~Derived().
-    // RESULT: The 1000 ints in 'heavyData' are lost in RAM forever (Leak).
-}
-```
-
-**The Fix:** Change `~Base()` to `virtual ~Base()`. Now, `delete ptr` triggers the **Dynamic** lookup. It finds the object is a `Derived`, calls `~Derived()` (cleaning the array), which then automatically calls `~Base()`.
 
 ---
 ### Hardware Realities
@@ -211,7 +175,7 @@ int main() {
 1. **Ambiguity:** If you call `child.grandmaFunc()`, the compiler panics: "Which path? Mom's Grandma or Dad's Grandma?"
 2. **Waste:** You have two sets of variables for Grandma (e.g., two `age` variables).
 
-**The Solution: `virtual` Inheritance**: We use the keyword `virtual` when `Mom` and `Dad` inherit from `Grandma`. This tells the compiler: _"If anyone else inherits from Grandma virtually, please **share** the same Grandma object. Do not create a new one."_
+**The Solution: `virtual` Inheritance**: We use the keyword `virtual` when `Mom` and `Dad` inherit from `Grandma`. This tells the compiler: _"If anyone else inherits from Grandma virtually, please **share** the same Grandma object. Do not create a new one."_ Grandma is now a virtual base class.
 
 #### 1. The Normal Layout
 
@@ -240,12 +204,14 @@ When `Mom` tries to read `age`, compiler follows the hidden pointer, jumps down 
 
 ### 3. Initialising `Grandma`
 
-Because `Grandma` is now a shared object, **who is responsible for initialising her?**
+Because `Grandma` is now a virtual base class, **who is responsible for initialising her?**
 - Normally, `Mom` calls `Grandma()`.
 - And `Dad` calls `Grandma()`.
 - But now there is only **one** `Grandma`. Who calls it?
 
-**Rule:** In Virtual Inheritance, the **Most Derived Class** (the `Child`) is responsible for calling the `Grandma` constructor directly.
+**Rule:** In Virtual Inheritance, the **Most Derived Class** (the `Child`) is responsible for calling the virtual base class (`Grandma`) constructor directly. Note that this is true even in a single inheritance case: if `Child` singly inherited from `Mom` and `Mom` was virtually inherited from `Grandma`, `Child` is still responsible for creating `Grandma`.
+
+**Rule:** All classes inheriting a virtual base class will have a virtual table (covered later), even if they would normally not have one otherwise, and thus instances of the class will be larger by a pointer.
 
 ```cpp
 class Child : public Mom, public Dad {
@@ -319,7 +285,7 @@ What happens if you just create a `Mom` object by herself, without a `Child`?
 Mom myMom; 
 ```
 
-In this specific case, `Mom` _is_ the Most Derived Class! There is no `Child` below her. So, the compiler suddenly stops ignoring `Mom`'s constructor. It allows `Mom` to call `Grandma(50)` and build the object herself.
+In this specific case, `Mom` _is_ the Most Derived Class.  So, the compiler stops ignoring `Mom`'s constructor. It allows `Mom` to call `Grandma(50)` and build the object herself.
 
 The compiler dynamically figures out who is at the very bottom of the chain at the exact moment you type `new` or declare the variable, and forces that specific class to be the builder. But no matter who builds it, everyone in the inheritance chain gets to share it.
 
@@ -390,7 +356,6 @@ int main() {
 ```
 
 #### Output 
-
 1. `Soul (999) Built.`
 2. `Body (888) Built.` _(Virtual Base 2 is forced to the bottom alongside Soul!)_
 3. `Vampire Built.`
@@ -562,7 +527,6 @@ int main() {
 By putting the using-declaration `using Base::print;` inside `Derived`, we are telling the compiler that all `Base` functions named `print` should be visible in `Derived`, which will cause them to be eligible for overload resolution. As a result, `Base::print(int)` is selected over `Derived::print(double)`.
 
 ---
-
 ### Hiding inherited functionality
 
 #### 1. **Changing an inherited member’s access level**
@@ -570,12 +534,7 @@ By putting the using-declaration `using Base::print;` inside `Derived`, we ar
 C++ gives us the ability to change an inherited member’s access specifier in the derived class. This is done by using a _using declaration_ to identify the (scoped) base class member that is having its access changed in the derived class, under the new access specifier.
 
 For example, consider the following Base:
-
-
-
 Because Base::printValue() has been declared as protected, it can only be called by Base or its derived classes. The public can not access it.
-
-![Ezoic](https://go.ezodn.com/utilcave_com/ezoicbwa.png "ezoic")
 
 ```cpp
 class Base {
