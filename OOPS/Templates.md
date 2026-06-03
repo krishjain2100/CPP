@@ -1,9 +1,3 @@
-### Related
-- [[Polymorphism]]
-- [[Const]]
-- [[Static]]
-- [[Value Categories]]
-
 When you write a template, you are **not writing code**; you are writing a **blueprint**. The compiler doesn't generate any machine code until you actually _use_ the template.
 
 - **Template:** The blueprint (e.g., `vector<T>`).
@@ -12,6 +6,55 @@ When you write a template, you are **not writing code**; you are writing a **blu
 If you use `vector<int>`, `vector<double>`, and `vector<string>`, the compiler effectively copy-pastes your class code **three times**, replacing `T` with the respective types. 
 This can lead to **Code Bloat** (larger binary size), but it makes the code incredibly fast (no runtime checks).
 
+---
+### 0. Template Declaration
+
+The `template <typename T>` statement is valid for exactly **one entity** (one function, one class, one struct, or one variable declaration) that immediately follows it. The microsecond that entity's definition ends (at the closing curly brace `}` or semicolon `;`), the template ceases to exist. You MUST write a brand new template declaration for the next function.
+
+If you try to stack templates to give a normal function two generic types, the compiler will instantly throw a fatal error.
+
+```cpp
+// WRONG: The compiler will panic.
+template <typename T>
+template <typename U>
+void add(T a, U b) {} 
+
+//FIX: 
+template <typename T, typename U>
+void add(T a, U b) {}
+```
+
+**Why it fails:** The compiler reads `template <typename T>`. It expects a function or a class next. Instead, it sees _another_ template declaration. It considers this illegal syntax for a standalone function.
+
+There is exactly **one** scenario in C++ where stacking templates continuously is legally required and perfectly valid: **Defining a templated method belonging to a templated class, outside of the class body.**
+
+Imagine a generic `Box` class that holds any type `T`. Inside that box, you want a generic function that can compare the box's contents with any other type `U`.
+
+
+```cpp
+// 1. The Class Blueprint
+template <typename T>
+class Box {
+public:
+    T content;
+    Box(T val) : content(val) {}
+
+    // A templated method inside a templated class
+    template <typename U>
+    bool isEqual(U other_val);
+};
+
+// 2. The Out-of-Line Definition (Where stacking happens)
+template <typename T>    // First, tell the compiler about the Class's type 'T'
+template <typename U>    // Second, tell the compiler about the Method's type 'U'
+bool Box<T>::isEqual(U other_val) {
+    return content == other_val;
+}
+```
+
+In this specific case, the compiler reads the first `template <typename T>` and unlocks the scope for the `Box<T>` class. It reads the second `template <typename U>` and unlocks the scope for the `isEqual` function.
+
+---
 ### 1. Function Templates
 Instead of writing `add(int, int)` and `add(float, float)`, you write one generic function. 
 
@@ -89,7 +132,6 @@ int main() {
 ```
 
 ---
-
 ### 4. Multiple Template Parameters & Default Types
 
 You can have multiple types, and you can even provide default types (just like default function arguments).
@@ -119,7 +161,6 @@ int main() {
 ```
 
 ---
-
 ### 5. Non-Type Template Parameters
 
 A template parameter doesn't have to be a type (like `int` or `string`); it can actually be a **value** (like the number `5`). This is heavily used in standard library containers like `std::array`.
@@ -144,10 +185,9 @@ int main() {
 **Why do this?** Because the `Size` is known at compile-time, it allows for heavy optimisation and allows you to create arrays on the Stack rather than allocating them dynamically on the Heap with `new`.
 
 ---
+### 6. The Header File Rule
 
-### 6. The "Header File" Rule
-
-Normally, you put the class declaration in the `.h` file and the function definitions in the `.cpp` file. **You cannot do this with templates.** 
+Normally, you put the class declaration in the `.h` file and the function definitions in the `.cpp` file. **You cannot do this with templates.** 
 Because the compiler needs to see the _entire blueprint_ to generate code when it encounters a template instantiation in `main.cpp`, **both the declaration and the implementation of a template must be in the header file (`.h`).** 
 If you put the implementation in a `.cpp` file, you will get Linker Errors (Unresolved External Symbol).
 
@@ -177,8 +217,9 @@ int main() {
 }
 ```
 
----
+**I DO NOT UNDERSTAND WHY** we don't have a template type base case ? Why are we using overloading ?
 
+---
 ### 8. The Guardrails
 
 For a long time, template errors were notoriously hideous. 
@@ -228,3 +269,4 @@ int x = Factorial<5>::value; // Evaluates to 120 at compile time.
 
 **The Downside:** It is incredibly verbose, hard to read, and creates huge compiler error messages. **Solution:**  [[Const|constexpr]]
 
+---

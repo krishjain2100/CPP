@@ -1,9 +1,3 @@
-### Related
-- [[Inheritance]]
-- [[RTTI]]
-- [[Templates]]
-- [[Encapsulation]]
-
 What Is Polymorphism? Same interface, different behaviour
 
 1. **Dynamic Polymorphism (`virtual`):** Decisions made at **Runtime** (Slower, flexible).
@@ -17,6 +11,7 @@ Use `virtuals` when the type is truly unknown until the user clicks a button or 
 ### Upcasting
 
 Below is an example of _Static Polymorphism_, i.e., which function will be called is decided at compile time
+
 
 ```cpp
 struct Animal { 
@@ -49,17 +44,17 @@ int main() {
 }
 ```
 
----
+When you use a reference (`&a1 = c`) or a pointer (`*a2 = &c`), you are not creating a new object. You are simply putting on a pair of "Animal glasses" to look at the existing `Cat` object in RAM.
+Because `a3` is strictly an `Animal`, it only has enough physical byte space to hold the `Animal` parts. The C++ compiler  copies the `Animal` foundation of `c` into the new memory slot for `a3`, and does not copy  the `Cat` part.
 
+---
 ### Virtual Functions
 
 We may want to store the Cats and Animals in a single vector (allows only one type), so we use upcasting, but we also want to maintain the specific Cat behaviour, so we use virtual functions
 
 Virtual functions are member functions whose behaviour can be overridden in derived classes.
 
-As opposed to non-virtual functions, the overriding behaviour is preserved even if there is no compile-time information about the actual type of the class. 
-
-That is to say, if a derived class is handled using pointer or reference to the base class, a call to an overridden virtual function would invoke the behaviour defined in the derived class. 
+As opposed to non-virtual functions, the overriding behaviour is preserved even if there is no compile-time information about the actual type of the class. That is to say, if a derived class is handled using pointer or reference to the base class, a call to an overridden virtual function would invoke the behaviour defined in the derived class. 
 
 Such a function call is known as _virtual function call_ or _virtual call_.
 
@@ -93,26 +88,37 @@ int main() {
 }
 ```
 
-If a function is declared `virtual` in the Base class, any function in a Derived class with the **same signature** (name + parameters) is automatically `virtual`, whether you write the keyword or not.
+If a function is declared `virtual` in the Base class, any function in a Derived class with the **same signature** (name + parameters + return type) is automatically `virtual`, whether you write the keyword or not. This does not work the other way around , a virtual override in a derived class does not implicitly make the base class function virtual.
 
 ---
-### Override
+### The `override` specifier
 
-Override is optional when declaring a member function inside a Derived Class that overrides the same virtual function in the Base Class, but it is good practice to clearly tell the compiler of the intended use of a function. The compiler will throw an error if you try to override a function that does not exist in the Base Class. Example:
+Override is optional when declaring a member function inside a Derived Class that overrides the same virtual function in the Base Class, but it is good practice to clearly tell the compiler of the intended use of a function. If a function marked as `override` does not override a base class function (or is applied to a non-virtual function), the compiler will flag the function as an error (so getting the function's signature wrong is prevented). Example:
+
+Because there is no performance penalty for using the override specifier and it helps ensure you’ve actually overridden the function you think you have, all virtual override functions should be tagged using the override specifier. Additionally, because the override specifier implies virtual, there’s no need to tag functions using the override specifier with the virtual keyword.
+
+Best practice:
+- Use the virtual keyword on virtual functions in a base class.
+- Use the override specifier (but not the virtual keyword) on override functions in derived classes. This includes virtual destructors.
+
+**Syntax:** add it where `const` (functions that don't modify members) comes. If `const` is also there then it comes after `const`.
 
 ```cpp
 struct Base {
     virtual void foo(int);
+    virtual void foo2(int) const;
 };
 
 struct Derived : Base {
     void foo(double);   // intended override, but NOT an override
 	// compiles fine
+	void foo2(int); // an override
 };
 
 // override saves you
 struct Derived : Base {
     void foo(double) override; // ERROR: compile-time error
+    void foo2(int) const override;
 };
 ```
 
@@ -122,7 +128,7 @@ struct Derived : Base {
 - Functions have the **same name**
 - **Different parameter lists**
 - **In the same scope**
-- 
+
 Example:
 
 ```cpp
@@ -151,19 +157,118 @@ struct Derived : Base {
 ```
 
 ---
+### The `final` specifier
+
+There may be cases where you don’t want someone to be able to override a virtual function, or inherit from a class. The final specifier can be used to tell the compiler to enforce this. If the user tries to override a function or inherit from a class that has been specified as final, the compiler will give an error.
+
+In the case where we want to restrict the user from overriding a function, the **final specifier** is used in the same place the override specifier is, like so:
+
+```cpp
+class A {
+public:
+	virtual std::string_view getName() const { return "A"; }
+};
+
+class B : public A {
+public:
+	std::string_view getName() const override final { return "B"; } 
+	// okay, overrides A::getName()
+};
+
+class C : public B {
+public:
+	std::string_view getName() const override { return "C"; } 
+	// compile error: overrides B::getName(), which is final
+};
+```
+
+In the case where we want to prevent inheriting from a class, the final specifier is applied after the class name:
+
+```cpp
+class A {
+public:
+	virtual std::string_view getName() const { return "A"; }
+};
+
+class B final : public // note the use of final here{
+public:
+	std::string_view getName() const override { return "B"; }
+};
+
+class C : public B {
+// compile error: cannot inherit from final class
+public:
+	std::string_view getName() const override { return "C"; }
+};
+```
+
+---
+### Covariant return types
+
+There is one special case in which a derived class virtual function override can have a different return type than the base class and still be considered a matching override. If the return type of a virtual function is a pointer or a reference to some class, override functions can return a pointer or a reference to a derived class. These are called **covariant return types**.
+
+```cpp
+class Base {
+public:
+	virtual Base* getThis() { 
+		std::cout << "called Base::getThis()\n"; 
+		return this; 
+	}
+	void printType() { std::cout << "returned a Base\n"; }
+};
+
+class Derived : public Base {
+public:
+	Derived* getThis() override { 
+		std::cout << "called Derived::getThis()\n";
+		return this; 
+	}
+	void printType() { std::cout << "returned a Derived\n"; }
+};
+
+int main() {
+	Derived d{};
+	Base* b{ &d };
+	d.getThis()->printType(); 
+	// calls Derived::getThis(), returns a Derived*, calls Derived::printType
+	b->getThis()->printType(); 
+	// calls Derived::getThis(), returns a Base*, calls Base::printType
+	// (This is not what is expected)
+}
+
+//This prints:
+
+// called Derived::getThis()
+// returned a Derived
+// called Derived::getThis()
+// returned a Base
+```
+
+
+One interesting note about covariant return types: C++ is statically types so it must know the type of every variable at compile time, so you always receive the return type dictated by the _Pointer's Lens_, regardless of which function actually executed.
+
+Here although pointer chasing results in`Derived::getThis()` to be called (but this was not known at compile time), but the return type would be `Base*` because `Base*` is safe and the compiler decided that the return type is going to be `Base*` at compile time itself.
+
+- We call b->getThis(). 
+- Variable b is a Base pointer to a Derived object.
+- Base::getThis() is a virtual function, so this calls Derived::getThis().
+- Although Derived::getThis() returns a `Derived*`, the return type would `Base*` as discussed. 
+- Because Base::printType() is non-virtual, Base::printType() is called.
+
+Note that if printType() were virtual instead of non-virtual, the result of b->getThis() (an object of type `Base*`) would have undergone virtual function resolution, and Derived::printType() would have been called.
+
+---
 ### Working of Virtual Functions
 
 It relies on two hidden things the compiler adds to your code:
 1. **The V-Table (The Map):** A static array of function pointers.
 2. **The V-Ptr (The Pointer):** A hidden pointer inside every object.
 #### 1. The V-Table (One per Class)
-
 When a class has _any_ virtual functions, the compiler creates a **hidden table** (array) for that class.
 - This table contains the **addresses** of the virtual functions for that specific class.
 - **Base Class V-Table:** Points to `Base::function`.
 - **Derived Class V-Table:** Points to `Derived::function` (if overridden) or `Base::function` (if not).
 #### 2. The V-Ptr (One per Object)
-
 Every time you create an object of a class with virtual functions, the compiler secretly adds a pointer member (let's call it `__vptr`) to the very top of that object. 
 This pointer holds the address of the **V-Table** belonging to that object's class.
 ####  3. Step-by-Step:
@@ -202,12 +307,466 @@ int main() {
 4. **Look up the function address** at the correct index (index 0 for `speak`).
 5. **Jump** to that address (`Derived::speak`).
 
+#### More Complex Example
+
+```cpp
+class Base {
+public:
+    int base_data = 10;
+    // 1. Non-virtual (Only in Base)
+    void normalBase() { std::cout << "Direct Base Jump\n"; } 
+    // 2. Virtual (Will be overridden)
+    virtual void sharedVirt() { std::cout << "Base Shared\n"; } 
+    // 3. Virtual (Will NOT be overridden)
+    virtual void keptVirt() { std::cout << "Base Kept\n"; } 
+};
+
+class Derived : public Base {
+public:
+    int derived_data = 20;
+    // 4. Non-virtual (Only in Derived)
+    void normalDerived() { std::cout << "Direct Derived Jump\n"; } 
+    // 5. Overriding the Base virtual function
+    void sharedVirt() override { std::cout << "Derived Shared\n"; } 
+};
+```
+
+###### **Step 1: Compile-Time** 
+
+When you compile, compiler immediately separates functions into two categories: **Static Bound** (non-virtual) and **Dynamic Bound** (virtual).
+
+For `normalBase()` and `normalDerived()`, the compiler realises they are not virtual and hardcodes their memory addresses directly into the executable file. They are not present in any table. They take up **zero** space in the object's RAM and have zero execution overhead.
+
+The compiler sees the `virtual` keyword and creates two hidden static arrays in the global read-only memory segment of your program.
+
+**How Indices are Defined:** The compiler assigns an integer index to every virtual function strictly based on the order they appear in the `Base` class.
+- `sharedVirt()` is seen first -> **Index 0**.
+- `keptVirt()` is seen second -> **Index 1**.
+
+**The Base V-Table:**
+- `[0]` -> Points to the machine code for `Base::sharedVirt`
+- `[1]` -> Points to the machine code for `Base::keptVirt`
+
+**The Derived V-Table:** The compiler copies the Base V-Table, and then updates the pointers _only_ for the functions `Derived` chose to override. The indices are permanently locked.
+- `[0]` -> Points to the machine code for `Derived::sharedVirt` _(Updated!)_
+- `[1]` -> Points to the machine code for `Base::keptVirt` _(Inherited unchanged!)_
+
+##### Step 2: Object Creation: `Base* ptr = new Derived();`
+
+The OS allocates a block of RAM for the `Derived` object. Because the class hierarchy contains virtual functions, the compiler secretly injects a hidden pointer (`__vptr`) at **Offset 0** (the very top of the memory block). If you look at the raw physical bytes of this specific `Derived` object in RAM, it looks exactly like this: _(Note: Pointers are 8 bytes on a 64-bit system, ints are 4 bytes)._
+
+- **Byte 0-7:** `[ __vptr ]` _(Contains the memory address of the Derived V-Table)_
+- **Byte 8-11:** `[ base_data ]` _(Value: 10)_
+- **Byte 12-15:** `[ derived_data ]` _(Value: 20)_
+
+##### Step 3: Pointer Chasing
+
+Now, let's look at what the CPU does when you call different functions using `ptr`. 
+Remember, the compiler only knows `ptr` is a `Base*`.
+###### Scenario A: The Non-Virtual Base Function
+`ptr->normalBase();`
+
+1. **The Compiler:** "This function is not virtual. I don't care what object is actually in RAM. `ptr` is a `Base*`, so I will just jump directly to the hardcoded address of `Base::normalBase`."
+2. **The CPU:** Executes a direct `JMP` instruction.
+3. **Cost:** 1 clock cycle. Instant. It completely ignores the `__vptr`.
+
+###### Scenario B: The Non-Virtual Derived Function
+`ptr->normalDerived();`
+
+1. **The Compiler:** "Wait. `ptr` is a `Base*`. I am looking at the `Base` blueprint. There is no `normalDerived` function here."
+2. **Result:** Fatal Compile Error. Even though the object in RAM _is_ a Derived, the static type of the pointer acts as a blinder. Because it's not virtual, the compiler refuses to look at the object's actual identity.
+
+###### Scenario C: The Virtual Call
+`ptr->sharedVirt();`
+
+The compiler knows this is virtual, so does not hardcode a jump. Instead, it generates a sequence of raw Assembly instructions to chase the pointers at runtime.
+
+1. **Dereference the Object:** The CPU looks at `ptr` to find where the object lives in RAM (e.g., `0x1000`).
+2. **Fetch the V-Ptr:** The CPU reads the first 8 bytes at `0x1000`. This is the `__vptr`. It tells the CPU where the V-Table is located (e.g., `0x8000`).
+3. **Apply the Index Offset:** The compiler knows `sharedVirt` is exactly **Index 0**. A memory address is 8 bytes. So the CPU calculates: `0x8000 + (0 * 8) = 0x8000`.
+4. **Fetch the Function Address:** The CPU reads the 8 bytes stored at `0x8000` in the V-Table. This gives it the physical memory address of the actual function's machine code (e.g., `0xAAAA`).
+5. **The Jump:** The CPU executes a jump to `0xAAAA`. Because the `__vptr` pointed to the _Derived_ V-Table, `0xAAAA` happens to be the code for `Derived::sharedVirt()`.
+6. **Cost:** 3 memory lookups before the function even begins.
+
+
+---
+### The Virtual Destructor
+
+When you `delete` a pointer, the compiler checks the type of the pointer.
+- If you delete an `Animal*`, the compiler calls `~Animal()`.
+- It does **not** check if the object is actually a `Dog` **UNLESS** the destructor is marked `virtual`.
+
+**The Consequence (Memory Leak):** If the destructor is not virtual, the "Child" part of the object is never cleaned up.
+
+```cpp
+class Base {
+public:
+    // WITHOUT 'virtual', this is a "Staticaly bound" function, i.e the decisions about it are taken at compile time using the provided types
+    ~Base() { cout << "Base cleaned up."; } 
+};
+
+class Derived : public Base {
+    int* heavyData;
+public:
+    Derived() { heavyData = new int[1000]; } // 1. Allocate memory
+    ~Derived() { 
+        delete[] heavyData; // 2. Free memory
+        cout << "Derived cleaned up."; 
+    }
+};
+
+int main() {
+    Base* ptr = new Derived(); // Upcasting
+    delete ptr; 
+    // Compiler sees: ptr is Base*.
+    // Compiler calls: ~Base().
+    // Compiler IGNORES: ~Derived().
+    // RESULT: The 1000 ints in 'heavyData' are lost in RAM forever (Leak).
+}
+```
+
+**The Fix:** Change `~Base()` to `virtual ~Base()`. Now, `delete ptr` triggers the **Dynamic** lookup. It finds the object is a `Derived`, calls `~Derived()` (cleaning the array), which then automatically calls `~Base()`.
+
+**Q. Should we make all destructors virtual?**
+
+It’s easy to say yes, so you can later use the class as a base class, but there’s a performance penalty for doing so (pointer chasing, vptr, vtables). If a class isn’t explicitly designed to be a base class, then it’s generally better to have no virtual members and no virtual destructor.. If a class is designed to be used as a base class and/or has any virtual functions, then it should always have a virtual destructor.
+
+Conventional wisdom has suggested avoiding the non-virtual destructor memory leak situation as follows, “**A base class destructor should be either public and virtual, or protected and non-virtual.”** A base class with a protected destructor can’t be deleted using a base class pointer, which prevents deleting a derived class object through a base class pointer.
+
+Unfortunately, this also prevents _any_ use of the base class destructor by the public. That means:
+- We **shouldn’t** dynamically allocate base class objects by we have no conventional way to delete them (there are non-conventional workarounds, but yuck).
+- We **can’t** even statically allocate base class objects because the destructor isn’t accessible when they go out of scope.
+
+In other words, using this method, to make the derived class safe, we have to make the base class practically unusable by itself.
+
+Recommendation
+- If you intend your class to be inherited from, make sure your destructor is virtual and public.
+- If you do not intend your class to be inherited from, mark your class as `final`. This will prevent other classes from inheriting from it in the first place, without imposing any other use restrictions on the class itself.
+
+---
+### Abstract Classes
+
+Sometimes, a Base class is just a concept (like "Shape"). It doesn't make sense to have a "Generic Shape." You can only have a Circle, Square, etc.
+
+**Syntax:** `virtual void functionName() = 0;`
+
+**The Rules:**
+1. **No Implementation:** The Base class  has _no code_ for this function.
+2. **Mandatory Override:** Any class inheriting from this **MUST** provide the code for this function. If it doesn't, it becomes an abstract class too.
+3. **Cannot Instantiate:** You cannot create an object of a class with atleast one pure virtual function. `Shape s;` is a compiler error.
+
+```cpp
+class Shape {
+public:
+    // Pure Virtual Function
+    virtual void draw() = 0; 
+    virtual ~Shape() {}
+};
+
+class Circle : public Shape {
+public:
+    void draw() override { cout << "Drawing Circle"; }
+};
+
+int main() {
+    // Shape s; // ERROR: Cannot instantiate abstract class
+    Shape* s1 = new Circle(); // OK: Pointer to base
+    s1->draw(); // Calls Circle::draw()
+}
+```
+
+The compiler-generated destructor (in case you forget to write one) is **NOT `virtual`** by default. This is dangerous for Abstract Classes because they are almost always used via base pointers (`Shape* s = new Circle();`). So, when we call `delete s`, it will call the default destructor of `Shape` leading to memory leaks. So remember to write a virtual destructor in the base class.
+
+You can still have an implementation of `draw()` for `Shape` so that the derived classes can reuse this code if it is shared work. Remember that this doesn't change the fact that `Shape` is an abstract class and creating it's object is not allowed and that any derived class must provide the implementation of `draw()` or else they would be abstract too.
+
+```cpp
+class Shape {
+public:
+    // Pure Virtual Function
+    virtual void draw() = 0; 
+    virtual ~Shape() {}
+};
+void Shape::draw() {
+	cout << "I am drawing\n";
+}
+// usage
+void Circle::draw() override {
+	Shape::draw();
+	cout << "Drawing Circle\n";
+}
+```
+
+----
+### **Interface classes**
+
+It is a class that has no member variables, and where _all_ of the functions are pure virtual. 
+
+```cpp
+class IErrorLog {
+public:
+    virtual bool openLog(std::string_view filename) = 0;
+    virtual bool closeLog() = 0;
+    virtual bool writeError(std::string_view errorMessage) = 0;
+    virtual ~IErrorLog() {} // don't make this = 0; as it will be called by the derived destructor and it's implementation is needed. If you do make it = 0; then have an implementation using scoping as described above.
+};
+```
+
+Any class inheriting from IErrorLog must provide implementations for all three functions in order to be instantiated. .
+
+Interface classes have become extremely popular because they are easy to use, easy to extend, and easy to maintain. In fact, some modern languages, such as Java and C#, have added an “interface” keyword that allows programmers to directly define an interface class without having to explicitly mark all of the member functions as abstract. Furthermore, although Java and C# will not let you use multiple inheritance on normal classes, they will let you multiple inherit as many interfaces as you like. Because interfaces have no data and no function bodies, they avoid a lot of the traditional problems with multiple inheritance while still providing much of the flexibility.
+
+For consistency, abstract classes still have virtual tables. The virtual table entry for a class with a pure virtual function will generally either contain a null pointer, or point to a generic function that prints an error (sometimes this function is named _ purecall).
+
+---
+### Gotchas
+
+1. **Virtual function resolution only works when a member function is called through a pointer or reference to a class type object.** It works because the compiler can differentiate the type of the pointer or reference from the type of the object being pointed to or referenced. 
+
+```cpp
+// C is derived from A
+C c{};
+std::cout << c.getName(); // will always call C::getName
+
+A a { c }; // copies the A portion of c into a (don't do this)
+std::cout << a.getName(); // will always call A::getName
+```
+
+Consider the following program:
+
+```cpp
+int main() {
+	std::vector<Base> v{};
+	v.push_back(Base{ 5 });    // add a Base object to our vector
+	v.push_back(Derived{ 6 }); // add a Derived object to our vector
+
+        // Print out all of the elements in our vector
+	for (const auto& e : v)
+		cout << "I am " << e.getName() << " with value " << e.getValue() << "\n";
+}
+```
+
+This program compiles. But it prints:
+I am Base with value 5
+I am Base with value 6
+
+When Derived(6) was added to the vector, it was sliced, i.e only the Base part of Derived got copied into the vector element. For fixing this, many programmers try creating a std::vector of references to an object.c`std::vector<Base&> v{};` Unfortunately, this won’t compile because elements of std::vector must be assignable, whereas references can’t be reassigned (only initialised).
+
+One way to address this is to make a vector of pointers: `
+nullptr` is now a valid option, which may or may not be desirable.
+
+```cpp
+int main() {
+	std::vector<Base*> v{};
+	Base b{ 5 }; 
+	Derived d{ 6 };
+	v.push_back(&b); // add a Base object to our vector
+	v.push_back(&d); // add a Derived object to our vector
+	// Print out all of the elements in our vector
+	for (const auto* e : v)
+	cout << "I am " << e->getName() << " with value " << e->getValue() << '\n';
+}
+```
+
+Another option is to use `std::reference_wrapper`, which is a class that mimics an reassignable reference:
+
+```cpp
+#include <functional> // for std::reference_wrapper
+#include <iostream>
+#include <string_view>
+#include <vector>
+
+class Base {
+protected:
+    int m_value{};
+
+public:
+    Base(int value) : m_value{ value } {}
+    virtual ~Base() = default;
+    virtual std::string_view getN() const { return "Base"; }
+    int getV() const { return m_value; }
+};
+
+class Derived : public Base {
+public:
+    Derived(int value) : Base{ value } {}
+    std::string_view getN() const override { return "Derived"; }
+};
+
+int main() {
+	std::vector<std::reference_wrapper<Base>> v{}; 
+	// a vector of reassignable references to Base
+	Base b{ 5 }; 
+	Derived d{ 6 };
+	v.push_back(b); // add a Base object to our vector
+	v.push_back(d); // add a Derived object to our vector
+	// Print out all of the elements in our vector
+	// we use .get() to get our element out of the std::reference_wrapper
+	for (const auto& e : v) 
+	// element has type const std::reference_wrapper<Base>&
+	cout << "I am " << e.get().getN() << " " << e.get().getV() << '\n';
+}
+```
+
+
+2. **The Frankenobject**
+Consider the following code:
+
+```cpp
+int main() {
+    Derived d1{ 5 };
+    Derived d2{ 6 };
+    Base& b{ d2 };
+    b = d1; // this line is problematic
+}
+```
+
+The fourth line is where things go astray. Since b points at d2, and we’re assigning d1 to b, you might think that the result would be that d1 would get copied into d2, and it would, if b were a Derived. But b is a Base, and the operator= that C++ provides for classes isn’t virtual by default. Consequently, the assignment operator that copies a Base is invoked, and only the Base portion of d1 is copied into d2.
+As a result, d2 now has the Base portion of d1 and the Derived portion of d2. Youh have just created a Frankenobject composed of parts of multiple objects.
+
+There’s no easy way to prevent this from happening (other than avoiding assignments like this).
+
+**Tip:** If the Base class is not designed to be instantiated by itself (e.g. it is just an interface class), slicing (copying only a subpart) can be avoided by making the Base class non-copyable (by deleting the Base copy constructor and Base assignment operator).
+
+
+3. **Do not call virtual functions from constructors or destructors**
+Remember that when a Derived class is created, the Base portion is constructed first. If you were to call a virtual function from the Base constructor, and Derived portion of the class hadn’t even been created yet, it would be unable to call the Derived version of the function because there’s no Derived object for the Derived function to work on. In C++, it will call the Base version instead. A similar issue exists for destructors. If you call a virtual function in a Base class destructor, it will always resolve to the Base class version of the function, because the Derived portion of the class will already have been destroyed.
+
+The Base class implementation is used becuase vptr is constantly changing as the object is being built. While the Base constructor is running it points to the Base class' VTable and right before Derived constructor is run, it is made to point to Derived class' VTable.
+
+---
+###  Printing inherited classes using operator<<
+
+As discussed in [[Inheritance]], using friend functions of Base class from Derived objects becomes a concern such as operator<<  becuase the friend functions are not virtual and cannot be made virtual.  Even if we could virtualise operator<<, the function parameters for Base::operator<< and Derived::operator<< differ, and thus are ineligible for virtual function resolution.
+
+```cpp
+class Base {
+public:
+	virtual void print() const { std::cout << "Base"; }
+	friend std::ostream& operator<<(std::ostream& out, const Base& b) {
+		out << "Base"; return out;
+	}
+};
+
+class Derived : public Base {
+public:
+	void print() const override { std::cout << "Derived"; }
+	friend std::ostream& operator<<(std::ostream& out, const Derived& d) {
+		out << "Derived"; return out;
+	}
+};
+
+int main() {
+    Derived d{};
+    Base& bref{ d };
+    std::cout << bref << '\n'; // prints base
+}
+```
+
+**Solution:**
+Rather than have `operator<<` determine what to print, we will instead have it call a normal member function that _can_ be virtualised! This virtual function will do the work of determining what to print for each class.
+
+
+```cpp
+class Base {
+public:
+	friend std::ostream& operator<<(std::ostream& out, const Base& b)  {
+		out << b.identify();
+		return out;
+	}
+	// Because identify() is a normal member function, it can be virtualized
+	virtual std::string identify() const { return "Base";}
+};
+
+class Derived : public Base {
+public:
+	std::string identify() const override { return "Derived"; }
+};
+
+int main() {
+	Base b{};
+	std::cout << b << '\n';
+	Derived d{};
+	std::cout << d << '\n';
+	Base& bref{ d };
+	std::cout << bref << '\n';
+}
+This prints the expected result:
+
+Base
+Derived
+Derived
+```
+
+
+Note that we don’t need to define an `operator<<` for each derived class. The version that handles Base objects works just fine for both Base objects and any class derived from Base because of walking up the inheritance tree.
+
+The above solution works great, but has two potential shortcomings:
+1. It makes the assumption that the desired output can be represented as a single std::string.
+2. Our `identify()` member function does not have access to the stream object.
+
+The latter is problematic in cases where we need a stream object, such as when we want to print the value of a member variable that has an overloaded operator<<.
+
+Fortunately, it’s straightforward to modify the above example to resolve both of these issues. 
+We’ll define virtual member function `print()` and delegate responsibility for printing _directly_ to that function.
+
+```cpp
+class Base {
+public:
+	// Here's our overloaded operator<<
+	friend std::ostream& operator<<(std::ostream& out, const Base& b) {
+		return b.print(out);
+	}
+	// We'll rely on member function print() to do the actual printing
+	// Because print() is a normal member function, it can be virtualized
+	virtual std::ostream& print(std::ostream& out) const {
+		out << "Base";
+		return out;
+	}
+};
+
+struct Employee {
+	std::string name{};
+	int id{};
+
+	friend std::ostream& operator<<(std::ostream& out, const Employee& e) {
+		out << "Employee(" << e.name << ", " << e.id << ")";
+		return out;
+	}
+};
+
+class Derived : public Base {
+private:
+	Employee m_e{}; // Derived now has an Employee member
+public:
+	Derived(const Employee& e) : m_e{ e} {}
+	std::ostream& print(std::ostream& out) const override {
+		out << "Derived: ";
+		out << m_e;
+		return out;
+	}
+};
+
+int main() {
+	Base b{};
+	std::cout << b << '\n';
+	Derived d{ Employee{"Jim", 4}};
+	std::cout << d << '\n'; 
+	Base& bref{ d };
+	std::cout << bref << '\n';
+}
+
+This outputs:
+
+Base
+Derived: Employee(Jim, 4)
+Derived: Employee(Jim, 4)
+```
+
 ---
 ### CRTP
+First read [[Templates]].
 
-**CRTP (Curiously Recurring Template Pattern)** is a technique to achieve **polymorphism at compile-time**.
-
-The name comes from the fact that the class inheritance looks like a loop or a paradox:
+**CRTP (Curiously Recurring Template Pattern)** is a technique to achieve **polymorphism at compile-time**. The name comes from the fact that the class inheritance looks like a loop or a paradox:
 
 ```cpp
 // 1. Base is a Template
@@ -224,11 +783,7 @@ class Derived : public Base<Derived> { ... };
 
 ####  How it Works 
 
-In a normal virtual function, the program looks at a hidden table (v-table) at runtime to find the right function.
-
-In CRTP, the **Base class knows exactly who its child is** because we told it via the template parameter `T`.
-
-Therefore, the Base class can cast its own `this` pointer to the Child type to call the Child's functions.
+In a normal virtual function, the program looks at a hidden table (v-table) at runtime to find the right function. In CRTP, the **Base class knows exactly who its child is** because we told it via the template parameter `T`. Therefore, the Base class can cast its own `this` pointer to the Child type to call the Child's functions.
 
 ```cpp
 template <typename Derived>
@@ -256,6 +811,32 @@ int main() {
 }
 ```
 
+#### How did down-casting become safe here ?
+
+Base object still doesn't have the methods and variables of Derived. 
+If you were to somehow create a standalone `Base<MyClass>` object and try to cast its `this` pointer to `MyClass`, the program would crash. However, **in CRTP, you never create a standalone `Base` object.** You only ever instantiate the `Derived` object (`MyClass obj;`).
+
+Because of this, the `this` pointer inside the `Base` class is never pointing to _just_ a Base object; it is pointing to the Base"sub-object that lives entirely inside the larger `MyClass` object.
+
+#### The Memory Layout 
+When you write `MyClass obj;` in `main()`, the C++ compiler allocates a single block of memory for the entire `MyClass` object.
+
+```plaintext
+  Memory Layout of 'obj'
+ --------------------------------- 
+|  Base<MyClass> subobject        | <--- Inside interface(), 'this' points here
+|  (Contains Base variables)      |
+|---------------------------------|
+|  MyClass specific parts         | 
+|  (Contains MyClass variables)   |
+ ---------------------------------  
+ <--- After static_cast, the pointer sees this whole box
+```
+
+The `this` pointer is temporarily scoped to look at the `Base<MyClass>` part of the memory block. When you do this: `Derived* ptr = static_cast<Derived*>(this);`, you are telling the compiler to widen the view.
+
+Because the object was created as a `MyClass` in the first place, that memory _actually exists_. The downcast is perfectly safe.
+
 ---
 #### CRTP vs. Virtual Functions 
 
@@ -266,9 +847,9 @@ int main() {
 | **Speed**        | Slower (Cannot be inlined easily)           | **Ultra Fast** (Can be fully inlined)                 |
 | **Flexibility**  | High (Can store `Base*` in a vector)        | Low (Cannot store different CRTP types in one vector) |
 | **Memory**       | Adds overhead (vptr + vtable)               | **Zero Overhead**                                     |
+|                  |                                             |                                                       |
 
 **Visualising the Speed:**
-
 - **Virtual:** `Base` -> (Look at vtable) -> (Find address) -> `Derived::func()`
 - **CRTP:** `Base` -> `Derived::func()` (The compiler effectively deletes the middleman).
 
@@ -311,3 +892,130 @@ int main() {
 }
 ```
 
+---
+#### Multiple Inheritance (Dual V-Ptr) (did not understand, to be updated)
+
+What if a class inherits from two _completely unrelated_ base classes that both have virtual functions?
+
+```cpp
+class Printer {
+public:
+    virtual void print() { cout << "Printing..."; }
+};
+
+class Scanner {
+public:
+    virtual void scan() { cout << "Scanning..."; }
+};
+
+class Copier : public Printer, public Scanner {
+public:
+    void print() override { cout << "Copier Printing..."; }
+    void scan() override { cout << "Copier Scanning..."; }
+};
+```
+
+ **A `Copier` object has TWO hidden V-Ptrs.**
+
+Why? Because of polymorphism and casting. If you write `Scanner* s = new Copier();`, the pointer `s` is looking strictly at the `Scanner` part of the object. When you call `s->scan()`, the compiler expects to find a V-Ptr at the very top of the memory it is looking at. It has no idea it's actually looking at a `Copier`.
+
+To make this work, the compiler stacks the memory and injects a V-Ptr at the top of _every_ base class block.
+
+**The Physical RAM Dump of a `Copier` object:**
+
+1. **`[ __vptr_Printer ]`** _(Points to Copier's custom Printer V-Table)_
+2. `Printer` Variables
+3. **`[ __vptr_Scanner ]`** _(Points to Copier's custom Scanner V-Table)_
+4. `Scanner` Variables
+5. `Copier` Variables
+
+If you do `Scanner* s = new Copier();`, the compiler actually does **Pointer Arithmetic**. It shifts the memory address of the pointer down by 8 bytes so it physically points to the middle of the `Copier` object, landing exactly on `__vptr_Scanner`.
+
+ut what are these 2 different vptrs pointning to, they point to the smae Copier's Vtable right ?
+
+This is the most logical assumption to make, but it is actually **incorrect**.
+
+They do **not** point to the same V-Table.
+
+If you inherit from two base classes with virtual functions, the C++ compiler actually generates **multiple, completely separate V-Tables** for the `Copier` class.
+
+To understand why the compiler is forced to build multiple V-Tables, we have to look at a brutal mathematical problem: **The Index Collision.**
+
+### The Problem: Who gets Index 0?
+
+Remember how the compiler assigns a hardcoded integer Index to every virtual function? Let's look at the original blueprints for your base classes:
+
+C++
+
+```
+class Printer {
+    virtual void print(); // Compiler assigns Index 0
+};
+
+class Scanner {
+    virtual void scan();  // Compiler assigns Index 0
+};
+```
+
+Both `print()` and `scan()` were the very first virtual functions in their respective classes. Therefore, they both claim **Index 0**.
+
+Now, imagine if the `Copier` class only had _one_ V-Table. What function does the compiler put at Index 0?
+
+- If it puts `Copier::print` at Index 0, then a `Scanner*` pointing to this object will accidentally call `print()` when it meant to call `scan()`.
+    
+- If it puts `Copier::scan` at Index 0, then a `Printer*` will accidentally call `scan()` when it meant to call `print()`.
+    
+
+### The Solution: Primary and Secondary V-Tables
+
+Because the compiler cannot change the hardcoded indices that the pointers are expecting, it solves the collision by creating two distinct lookup arrays for the exact same `Copier` class.
+
+#### 1. The Primary V-Table (For Printer)
+
+Because `Printer` was listed first in your code (`class Copier : public Printer, public Scanner`), it gets to be the "Primary" base.
+
+- `__vptr_Printer` points to this table.
+    
+- **Index 0** in this table points to the machine code for `Copier::print()`.
+    
+
+#### 2. The Secondary V-Table (For Scanner)
+
+Because `Scanner` was listed second, the compiler builds a completely separate "Secondary" V-Table just to satisfy the `Scanner*` pointer.
+
+- `__vptr_Scanner` points to this table.
+    
+- **Index 0** in this table points to the machine code for `Copier::scan()`.
+    
+
+Now, both pointers get exactly what they want. A `Printer*` looks at Index 0 of the Primary table and gets `print`. A `Scanner*` looks at Index 0 of the Secondary table and gets `scan`.
+
+### The Final Boss: The "Thunk" (Fixing the `this` pointer)
+
+There is one final, mind-bending problem the compiler has to solve behind the scenes.
+
+When you call `s->scan();`, you are executing `Copier::scan()`. Inside that function, you might want to access a `Copier` variable. That means the hidden `this` pointer inside the function needs to point to the very top of the `Copier` object (Address `0x1000`).
+
+But remember what we just learned about Multiple Inheritance? The `Scanner* s` pointer was shifted! It is currently pointing to the _middle_ of the object (Address `0x1010`).
+
+If the CPU just jumped straight into `Copier::scan()`, the `this` pointer would be wrong. It would be shifted by 16 bytes, and if you tried to read a variable, you would read garbage memory.
+
+To fix this, the **Secondary V-Table doesn't actually point directly to your function.** It points to a **Thunk**.
+
+A Thunk is a tiny, invisible, compiler-generated snippet of Assembly code that does exactly one thing: it does pointer arithmetic in reverse.
+
+**Here is the exact physical execution path of `s->scan()`:**
+
+1. CPU reads `s` (`0x1010`).
+    
+2. CPU reads `__vptr_Scanner` at that address.
+    
+3. CPU goes to the Secondary V-Table, Index 0.
+    
+4. CPU jumps to the **Thunk**.
+    
+5. The Thunk executes: `"Subtract 16 bytes from the 'this' pointer, moving it back to 0x1000."`
+    
+6. The Thunk directly jumps into the real `Copier::scan()` function.
+
+---
