@@ -1,4 +1,3 @@
-
 A **Functor/Function Objects** is just a fancy name for a standard C++ `class` or `struct` that overrides the **`operator()`** (the parentheses operator). This trick allows an _instance of an object_ to be invoked exactly like a function.
 
 ```cpp

@@ -1,10 +1,3 @@
-
-### Related
-- [[Namespace]]
-- [[Inheritance]]
-- [[Enum]]
-- [[Static]]
-
 The **Scope Resolution Operator** is the double colon `::`.
 
 In C++, names (variables, functions) can exist in many places: inside a class, inside a parent class, inside a namespace, or in the global scope. The `::` operator acts as a path selector to pinpoint exactly which one you mean.

@@ -1,4 +1,3 @@
-
 Introduced in C++11, a lambda expression is a convenient way to define an anonymous function object right at the location where it is invoked or passed as an argument.
 
 When you write a lambda, the C++ compiler automatically generates an unnamed, hidden class (called a "closure type") that overloads the `operator()`.

@@ -1,9 +1,3 @@
-### Related
-- [[4. CMake]]
-- [[2. Makefile]]
-- [[RTTI]]
-- [[Namespace]]
-
 #### 1. The Problem: C++ is Static
 
 Standard C++ is designed for raw performance. Once you compile your code, class names (like `MyClass`) are essentially erased and turned into memory addresses.
@@ -108,3 +102,4 @@ The first two lines tell the computer how to interpret the file:
     - **`xmlns="http://www.w3.org/2000/svg"`**: This is the **XML Namespace**. It tells the software that every tag inside (like `<rect>`) belongs to the official W3C SVG standard. Without this, a browser might just treat it as a generic text file.
     - **`width="800" height="600"`**: This defines the "physical" size of the drawing area on your screen in pixels.
     - **`viewBox="0 0 800 600"`**: This is the **coordinate system**. It says: "The top-left corner is (0,0) and the bottom-right is (800, 600)." This allows the image to scale perfectly; if you change the width/height, the `viewBox` ensures the internal shapes stay in the same relative positions.
+---

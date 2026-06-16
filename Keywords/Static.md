@@ -1,9 +1,3 @@
-### Related
-- [[Scope Resolution]]
-- [[Namespace]]
-- [[Const]]
-- [[RTTI]]
-
 ### 1. The Static Variable
 
 **Behaviour:** It is created only **once** (the first time the function runs). It **never dies** until the program closes. It keeps its value between function calls.
