@@ -1,7 +1,7 @@
 ### 1. Const Variables
 
 A `const` variable cannot be changed after initialisation. It **must** be initialised when declared.
-
+The keyword can be written before or after the type, but the usual convention is to write before the type (like shown below).
 ```cpp
 const int maxScore = 100;
 // maxScore = 200; // ERROR: Cannot assign to variable 'maxScore'
@@ -9,7 +9,7 @@ const int maxScore = 100;
 
 ---
 ### 2. Const and Pointers
-(Avoid mixing const and pointers, you'll rarely encounter it ~ Akshat Jha)
+(Avoid mixing const and pointers, you'll rarely encounter it )
 
 The position of `const` relative to the asterisk `*` changes the meaning entirely.
 
@@ -20,7 +20,6 @@ The position of `const` relative to the asterisk `*` changes the meaning entirel
 | `const int * p`      | "Pointer to an `int` that is `const`" | You can change **where** `p` points, but you cannot change the **data** at that address.             |
 | `int * const p`      | "Const pointer to an `int`"           | You **cannot** change where `p` points (it's stuck to one address), but you can change the **data**. |
 | `const int* const p` | "Const pointer to a const int"        | You can change **nothing**. The address is locked, and the data is read-only.                        |
-
 
 ```cpp
 int x = 10;
@@ -45,7 +44,7 @@ const int* const p3 = &x;
 ---
 ### 3. Reference to Const (`const int&`)
 
-This is a **"Read-Only View"** of an object.
+This is a **Read-Only View** of an object.
 - You can read the value.
 - You **cannot** change the value through this reference.
 - The original object _might_ be changeable by someone else, but _you_ can't touch it.
@@ -62,7 +61,7 @@ x = 20;      // OK: x is not const, so we can change it directly.
 Also you can't have non-const references to const objects, as then the const objects could be modified through the reference, which would be wrong.
 
 ---
-### 4. Const Reference (`int& const`) - The "Silly" One
+### 4. Const Reference (`int& const`) : The Silly One
 
 **Question:** "What if I want a reference that cannot be reseated to point to a different object?"_
 **Answer:** All references are **already** like that. Once you create a reference `int& r = x;`, it is **forever** stuck to `x`. You cannot make it point to `y`. Therefore, writing `int& const` is redundant and technically ignored by modern compilers (though sometimes treated as an error).
@@ -70,7 +69,7 @@ Also you can't have non-const references to const objects, as then the const obj
 ---
 ### 5. Const Member Functions 
 
-Putting `const` at the end of a function signature promises that the function will **not modify any member variables**. It helps in compiler optimisation. If you do not write `const` at the end of the function name, the compiler assumes the function **WILL** change the object, even if the body is empty! If you have a `const Object`, you can **only** call `const` functions on it.
+Putting `const` at the end of a function signature promises that the function will **not modify any member variables**. It helps in compiler optimisation. If you do not write `const` at the end of the function name, the compiler assumes the function **WILL** change the object, even if the body is empty. If you have a `const Object`, you can **only** call `const` functions on it.
 
 
 ```cpp
@@ -127,7 +126,10 @@ void processImage(const Image& img) {
 ---
 ### 8. Const Return Types
 
-Returning `const` is rare for basic types (`const int f()`), but useful for returning references to internal data safely.
+For fundamental types, the `const` qualifier on a return type is simply ignored (your compiler may generate a warning), but it is useful for returning references to internal data safely.
+
+Returning a const value can also impede certain kinds of compiler optimiations (involving move semantics), which can result in lower performance.
+
 
 ```cpp
 class Student {
@@ -148,9 +150,10 @@ int main() {
 ```
 
 ---
-#### 10. `volatile` 
+#### 9. `volatile` 
 
-`volatile` is a qualifier that tells the C++ compiler: _"This variable's value can change at any given microsecond from completely outside the program. Do not trust it, and do not optimise it."
+In C++-23, there are only two type qualifiers (`const` and `volatile`).
+`volatile` tells the C++ compiler: _"This variable's value can change at any given microsecond from completely outside the program. Do not trust it, and do not optimise it."
 
 **Why we use it (The Optimisation Trap):** When you compile with optimizations (`-O2` or `-O3`), the compiler tries to make your code extremely fast by caching variables inside the CPU registers.
 

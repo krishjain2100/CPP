@@ -2,9 +2,8 @@ The **Scope Resolution Operator** is the double colon `::`.
 
 In C++, names (variables, functions) can exist in many places: inside a class, inside a parent class, inside a namespace, or in the global scope. The `::` operator acts as a path selector to pinpoint exactly which one you mean.
 
+---
 ### 1. Resolving Inheritance Ambiguity
-
-Reference from `Inheritance.md` notes regarding the **Diamond Problem**.
 
 If a `Child` inherits from both `Mom` and `Dad`, and both have a variable named `age` (inherited from `Grandma`), the compiler doesn't know which `age` to access. You use `::` to specify the path.
 
@@ -18,6 +17,7 @@ int main() {
 }
 ```
 
+---
 ### 2. Defining Class Functions Outside the Class
 
 Usually, you declare functions inside the class (in `.h`) and define them in a separate file (in `.cpp`). You need `::` to tell the compiler that this code belongs to `MyClass`.
@@ -36,6 +36,7 @@ void Box::open() {
 }
 ```
 
+---
 ### 3. Accessing Static Members
 
 As discussed previously, `static` members belong to the class, not the object. You access them using the class name and `::`.
@@ -54,12 +55,14 @@ int main() {
 }
 ```
 
+---
 ### 4. Namespaces & Enums
 
 - **Namespaces:** `std::cout` means "The `cout` inside the `std` namespace."
 - **Enums:** `Color::Red` means "The `Red` value inside the `Color` enum class."
-    
-### 5. The "Global Scope" Escape Hatch
+
+---
+### 5. The Global Scope Escape Hatch
 
 If you have a local variable with the same name as a global variable, the local one hides the global one. You can use `::` **without a name** in front of it to say "Go to the very top (Global) scope."
 
@@ -72,3 +75,4 @@ int main() {
     cout << ::x; // Prints 100 (Global)
 }
 ```
+---
