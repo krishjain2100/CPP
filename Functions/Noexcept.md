@@ -11,3 +11,5 @@ void func() noexcept {
 **The Optimisation (Compile Time)** Because the compiler knows the function won't throw:
 - It doesn't generate "stack unwinding" code (the heavy machinery needed to handle exceptions).
 - It enables functions like `std::vector::resize` to use `std::move_if_noexcept` to choose the faster path.
+
+---

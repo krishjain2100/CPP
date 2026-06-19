@@ -81,3 +81,5 @@ The confusion comes from thinking an `Enum` works like a `Struct` or an `Array`.
 **Explanation:**
 1. **It holds ONE value at a time:** When you create a variable `Status s = Status::Warning;`, the computer only allocates memory to store the number `1`. It does not store `0` and `2` alongside it. Since `1` fits inside an `unsigned char` (1 byte), the variable only needs 1 byte of RAM.
 2. **The Names are for Humans (Compile-Time only):** You might wonder, "Where are the strings 'Ok', 'Warning', 'Error' stored?" They are **NOT** stored in the variable. The compiler sees `Status::Warning`, replaces it with the number `1`, and throws the text away. The final binary running on the CPU generally doesn't know the word "Warning" exists.
+
+---
