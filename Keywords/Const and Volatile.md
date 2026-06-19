@@ -12,7 +12,6 @@ const int maxScore = 100;
 (Avoid mixing const and pointers, you'll rarely encounter it )
 
 The position of `const` relative to the asterisk `*` changes the meaning entirely.
-
 **Rule of Thumb:** Read from **Right to Left**.
 
 | **Syntax**           | **Read as...**                        | **Meaning**                                                                                          |
