@@ -1,4 +1,4 @@
-A namespace must be defined either in the global scope, or inside another namespace. They cannot be defined in local scope.
+A namespace must be defined either in the global scope, or inside another namespace. They cannot be defined in local scope. 
 
 **Why Use Namespaces?**
 - Prevent Collisions: Avoid naming conflicts between your code and libraries.
@@ -9,16 +9,7 @@ A namespace must be defined either in the global scope, or inside another namesp
 ### Defining your own namespaces
 
 C++ allows us to define our own namespaces via the `namespace` keyword. Namespaces that you create in your own programs are casually called **user-defined namespaces**
-
-Syntax:
-```
-namespace NamespaceIdentifier
-{
-    // content of namespace here
-}
-```
-
-To access the contents of a namepsace, we use [[Scope Resolution]]
+`namespace NamespaceIdentifier { // content }`. To access the contents of a namespace, we use [[Scope Resolution]]
 
 ---
 ### Identifier resolution from within a namespace
@@ -152,9 +143,7 @@ All content declared in an unnamed namespace is treated as if it is part of the 
 
 Unnamed namespaces will also keep **classes/structs** local to the translation unit, something for which there is no alternative equivalent mechanism to do.
 
-Unnamed namespaces should generally not be used in header files. 
-First obvious reason is binary bloat. 
-Second:
+Unnamed namespaces should generally not be used in header files. First obvious reason is binary bloat. Second:
 
 ```cpp
 // common.h

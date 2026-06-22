@@ -8,68 +8,9 @@ const int maxScore = 100;
 ```
 
 ---
-### 2. Const and Pointers
-(Avoid mixing const and pointers, you'll rarely encounter it )
+### 2. Const Member Functions 
 
-The position of `const` relative to the asterisk `*` changes the meaning entirely.
-**Rule of Thumb:** Read from **Right to Left**.
-
-| **Syntax**           | **Read as...**                        | **Meaning**                                                                                          |
-| -------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `const int * p`      | "Pointer to an `int` that is `const`" | You can change **where** `p` points, but you cannot change the **data** at that address.             |
-| `int * const p`      | "Const pointer to an `int`"           | You **cannot** change where `p` points (it's stuck to one address), but you can change the **data**. |
-| `const int* const p` | "Const pointer to a const int"        | You can change **nothing**. The address is locked, and the data is read-only.                        |
-
-```cpp
-int x = 10;
-int y = 20;
-
-// 1. Pointer to Const (Read-only Data)
-const int* p1 = &x; 
-// *p1 = 15; // ERROR: Data is const
-p1 = &y;     // OK: Pointer itself can move
-
-// 2. Const Pointer (Fixed Address)
-int* const p2 = &x;
-*p2 = 15;    // OK: Data is mutable
-// p2 = &y;  // ERROR: Pointer is const (stuck to x)
-
-// 3. Const Pointer to Const (Locked Down)
-const int* const p3 = &x;
-// *p3 = 15; // ERROR
-// p3 = &y;  // ERROR
-```
-
----
-### 3. Reference to Const (`const int&`)
-
-This is a **Read-Only View** of an object.
-- You can read the value.
-- You **cannot** change the value through this reference.
-- The original object _might_ be changeable by someone else, but _you_ can't touch it.
-
-```cpp
-int x = 10;
-const int& ref = x; // "ref" is a read-only window into "x"
-
-// ref = 20; // ERROR: ref is read-only
-x = 20;      // OK: x is not const, so we can change it directly.
-             // Now "ref" sees 20.
-```
-
-Also you can't have non-const references to const objects, as then the const objects could be modified through the reference, which would be wrong.
-
----
-### 4. Const Reference (`int& const`) : The Silly One
-
-**Question:** "What if I want a reference that cannot be reseated to point to a different object?"_
-**Answer:** All references are **already** like that. Once you create a reference `int& r = x;`, it is **forever** stuck to `x`. You cannot make it point to `y`. Therefore, writing `int& const` is redundant and technically ignored by modern compilers (though sometimes treated as an error).
-
----
-### 5. Const Member Functions 
-
-Putting `const` at the end of a function signature promises that the function will **not modify any member variables**. It helps in compiler optimisation. If you do not write `const` at the end of the function name, the compiler assumes the function **WILL** change the object, even if the body is empty. If you have a `const Object`, you can **only** call `const` functions on it.
-
+Putting `const` at the end of a function signature promises that the function will **not modify any member variables**. It mainly helps in maintaining correctness but also helps in minor compiler optimisations (some getters called multiple times can be called once only because we know it didn't get changed). If you do not write `const` at the end of the function name, the compiler assumes the function **WILL** change the object, even if the body is empty. If you have a `const Object`, you can **only** call `const` functions on it.
 
 ```cpp
 class Wallet {
@@ -91,9 +32,9 @@ void printWallet(const Wallet& w) {
 ```
 
 ---
-### 6. `mutable` Keyword 
+### 3. `mutable` Keyword 
 
-Sometimes, you need to modify a variable inside a `const` function (e.g., for debugging, logging, or thread locks).  The `mutable` keyword allows a specific member variable to be changed **even if the object is const**.
+Sometimes, you need to modify a variable inside a `const` function (e.g., for debugging, logging, or thread locks (you can then lock the mutex inside a const function)).  The `mutable` keyword allows a specific member variable to be changed **even if the object is const**.
 
 ```cpp
 class Database {
@@ -109,7 +50,7 @@ public:
 ```
 
 ---
-### 7. Const Function Parameters (Pass by Const Reference)
+### 4. Const Function Parameters (Pass by Const Reference)
 
 - **Pass by Value:** `void f(BigObj x)` -> **Slow** (Makes a copy).
 - **Pass by Reference:** `void f(BigObj& x)` -> **Fast** (No copy), but risky (function might change `x`).
@@ -123,11 +64,11 @@ void processImage(const Image& img) {
 ```
 
 ---
-### 8. Const Return Types
+### 5. Const Return Types
 
 For fundamental types, the `const` qualifier on a return type is simply ignored (your compiler may generate a warning), but it is useful for returning references to internal data safely.
 
-Returning a const value can also impede certain kinds of compiler optimiations (involving move semantics), which can result in lower performance.
+Returning a const value can also impede certain kinds of compiler optimiations (involving move semantics), which can result in better performance.
 
 
 ```cpp
@@ -149,12 +90,12 @@ int main() {
 ```
 
 ---
-#### 9. `volatile` 
+#### 6. `volatile` 
 
 In C++-23, there are only two type qualifiers (`const` and `volatile`).
 `volatile` tells the C++ compiler: _"This variable's value can change at any given microsecond from completely outside the program. Do not trust it, and do not optimise it."
 
-**Why we use it (The Optimisation Trap):** When you compile with optimizations (`-O2` or `-O3`), the compiler tries to make your code extremely fast by caching variables inside the CPU registers.
+**Why we use it (The Optimisation Trap):** When you compile with optimisations (`-O2` or `-O3`), the compiler tries to make your code extremely fast by caching variables inside the CPU registers.
 
 ```cpp
 int button_state = 0; // Hardware changes this to 1 when pressed
