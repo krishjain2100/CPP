@@ -100,7 +100,6 @@ Classes also provide a scope region, and it’s common to put enumerated types r
 Alternatively, if an enumeration is only used within the body of a single function, the enumeration should be defined inside the function. This limits the scope of the enumeration and its enumerators to just that function. The enumerators of such an enumeration will shadow identically named enumerators defined in the global scope.
 
 ---
-
 We can use the equality operators (`operator==` and `operator!=`) to test whether an enumeration has the value of a particular enumerator or not.
 
 ```cpp
@@ -108,9 +107,35 @@ Color shirt{ blue };
 if (shirt == blue) std::cout << "Your shirt is blue!";
 else std::cout << "Your shirt is not blue!";
 ```
-
 ---
+ 
+ Enums can also be used to define a collection of related bit flag positions for use with `std::bitset`:
 
+```cpp
+namespace Flags {
+    enum State {
+        isHungry,
+        isSad,
+        isMad,
+        isHappy,
+        isLaughing,
+        isAsleep,
+        isDead,
+        isCrying,
+    };
+}
+
+int main() {
+    std::bitset<8> me{};
+    me.set(Flags::isHappy);
+    me.set(Flags::isLaughing);
+    std::cout << std::boolalpha; // print bool as true/false
+    std::cout << "I am happy? " << me.test(Flags::isHappy) << '\n';
+    std::cout << "I am laughing? " << me.test(Flags::isLaughing) << '\n';
+}
+```
+
+Un-scoped enumerators will implicitly convert to integral values. We will explore this further:
 When we define an enumeration, each enumerator is automatically associated with an integer value based on its position in the enumerator list. By default, the first enumerator is given the integral value `0`, and so on.
 
 ```cpp
