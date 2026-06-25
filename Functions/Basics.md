@@ -46,7 +46,9 @@ You’re probably wondering why we’d write a function that has a parameter who
 1. Let’s say we have a function with a single parameter. Later, the function is updated in some way, and the value of the parameter is no longer needed. If the now-unused function parameter were simply removed, then every existing call to the function would break (because the function call would be supplying more arguments than the function could accept). This would require us to find every call to the function and remove the unneeded argument. This might be a lot of work (and require a lot of retesting). It also might not even be possible (in cases where we did not control all of the code calling the function). So instead, we might leave the parameter as it is, and just have it do nothing.
 2. Operators `++` and `--` have prefix and postfix variants (e.g. `++foo` vs `foo++`). An unreferenced function parameter is used to differentiate whether an overload of such an operator is for the prefix or postfix case. We cover this in lesson [21.8 -- Overloading the increment and decrement operators](https://www.learncpp.com/cpp-tutorial/overloading-the-increment-and-decrement-operators/).(didnt understand now)
 3. When we need to determine something from the type (rather than the value) of a type template parameter (did not understand).
+
 ---
+
 Functions have their own function type . Much like variables, functions live at an assigned address in memory (making them lvalues).
 
 ```cpp
@@ -59,3 +61,6 @@ int main() {
 ```
 
 When a function is referred to by name (without parenthesis), C++ converts the function into a function pointer (holding the address of the function). Then `operator<<` tries to print the function pointer, which it fails at because `operator<<` does not know how to print function pointers. The standard says that in this case, `foo` should be converted to a `bool` (which `operator<<` does know how to print). And since the function pointer for `foo` is a non-null pointer, it should always evaluate to Boolean `true`. Thus, this should print: 1
+
+----
+
