@@ -12,8 +12,6 @@
 
 **Note:** int* to float* is bad because this instruction just changes the glasses for compiler but not the underlying bits arrangement as is done for int to float so representation of 5 in int could be a representation for something else under float.
 
-`
-
 It tells the compiler:
 > _"I know these two types are different, but they are related (or compatible). Please convert X to Y. If they are totally unrelated, stop me with an error."_
 
@@ -24,6 +22,7 @@ It tells the compiler:
     - Child* to Base* ? Yes.
     - `std::string` to `int`? **No** (Compile Error).
     - `UnrelatedClassA*` to `UnrelatedClassB*`? **No** (Compile Error).
+- Uses direct-initialization.
 
 #### Down-casting is dangerous
 - **Upcasting (Child -> Base):** Always safe. Implicit.
