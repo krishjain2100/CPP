@@ -1,4 +1,3 @@
-
 ### Type deduction for initialized variables
 
 **Type deduction** (also sometimes called **type inference**) is a feature that allows the compiler to deduce the type of an object from the object’s initializer. 
@@ -114,6 +113,7 @@ auto foo() { return 5; }
 
 Compiler error: error C3779: 'foo': a function that returns 'auto' cannot be used before it is defined.
 
+---
 ### Trailing return type syntax
 
 The `auto` keyword can also be used to declare functions using a **trailing return syntax**, where the return type is specified after the rest of the function prototype.
@@ -162,6 +162,7 @@ auto add(int x, double y) -> std::common_type_t<decltype(x), decltype(y)>; // ok
 
 4. The trailing return syntax is also required for some advanced features, such as lambdas (which we cover in lesson [20.6 -- Introduction to lambdas (anonymous functions)](https://www.learncpp.com/cpp-tutorial/introduction-to-lambdas-anonymous-functions/)).
 
+---
 #### Type deduction can’t be used for function parameter types
 
 Many new programmers who learn about type deduction try something like this:
@@ -178,11 +179,10 @@ int main() {
 }
 ```
 
-Type deduction doesn’t work for function parameters, and prior to C++20, the above program won’t compile (you’ll get an error about function parameters not being able to have an auto type). In C++20, the `auto` keyword was extended so that the above program will compile and function correctly, however, `auto` is not invoking type deduction in this case. Rather, it is triggering a different feature called `function templates` that was designed to actually handle such cases.
-
-We introduce function templates in lesson [11.6 -- Function templates](https://www.learncpp.com/cpp-tutorial/function-templates/), and discuss use of `auto` in the context of function templates in lesson [11.8 -- Function templates with multiple template types](https://www.learncpp.com/cpp-tutorial/function-templates-with-multiple-template-types/).
+Type deduction doesn’t work for function parameters, and prior to C++20, the above program won’t compile (you’ll get an error about function parameters not being able to have an auto type). In C++20, the `auto` keyword was extended so that the above program will compile and function correctly, however, `auto` is not invoking type deduction in this case. Rather, it is triggering `function templates` that was designed to actually handle such cases.
 
 ---
+### Top/Low-Level Const
 
 A **top-level const** is a const qualifier that applies to an object itself. For example:
 1. `const int x;` : x is const and can't be changed
@@ -231,8 +231,7 @@ int main() {
 Dropping a reference may change a low-level const to a top-level const: `const std::string&` is a low-level const, but dropping the reference yields `const std::string`, which is a top-level const.
 
 ---
-
-Constexpr is not part of an expression’s type, so it is not deduced by `auto`.
+### Constexpr is not part of an expression’s type, so it is not deduced by `auto`.
 
 When defining a constexpr reference to a const variable (e.g. `constexpr const int&`), we need to apply both `constexpr` (which applies to the reference) and `const` (which applies to the type being referenced).
 
@@ -270,6 +269,7 @@ auto* ptr2{ getPtr() }; // std::string*
 
 The reason that references are dropped during type deduction but pointers are not dropped is because references and pointers have different semantics. When we evaluate a reference, we’re really evaluating the object being referenced. Therefore, when deducing a type, it makes sense that we should deduce the type of the thing being referenced, not the reference itself. On the other hand, pointers hold the address of an object. When we evaluate a pointer, we are evaluating the pointer, not the object being pointed to. Therefore, it makes sense that we should deduce the type of the pointer, not the thing being pointed to.
 
+---
 #### The difference between auto and auto*
 
 When we use `auto` with a pointer type initializer, the type deduced for `auto` includes the pointer. So for `ptr1` above, the type substituted for `auto` is `std::string*`.
@@ -291,7 +291,8 @@ This makes sense: in the `ptr4` case, `auto` deduces to `std::string`, then
 
 Second, there are differences in how `auto` and `auto*` behave when we introduce `const` into the equation. 
 
-#### Type deduction and const pointers 
+---
+#### Type deduction for const pointers 
 
 Just like with references, only top-level const is dropped during pointer type deduction.
 

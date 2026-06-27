@@ -90,7 +90,7 @@ int main() {
 ```
 
 ---
-#### 6. `volatile` 
+#### 6. `Volatile` Variables
 
 In C++-23, there are only two type qualifiers (`const` and `volatile`).
 `volatile` tells the C++ compiler: _"This variable's value can change at any given microsecond from completely outside the program. Do not trust it, and do not optimise it."
@@ -123,5 +123,9 @@ Note: **The Multithreading Trap**:  Many engineers mistakenly believe `volatile`
 - It does **not** stop the _CPU_ from reordering instructions out of order.
 - It does **not** prevent Data Races (two threads writing at the exact same millisecond).
 - For multithreading, always use `std::atomic<int>` or `std::mutex`.
+
+---
+### `Volatile` Member Functions
+
 
 ---

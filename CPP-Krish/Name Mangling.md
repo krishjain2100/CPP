@@ -1,6 +1,8 @@
-**Name mangling** is a language the C++ compiler uses to uniquely identify every piece of your code behind the scenes.
+When the compiler compiles a function, it performs **name mangling**, which means the compiled name of the function is altered (“mangled”) based on various criteria, such as the number and type of parameters, so that the linker has unique names to work with.
 
-### 1. The Problem: Function Overloading
+For example, a function with prototype `int fcn()` might compile to mangled name `__fcn_v`, whereas `int fcn(int)` might compile to mangled name `__fcn_i`. So while in the source code, the two overloaded functions share the name `fcn()`, in compiled code, the mangled names are unique (`__fcn_v` vs `__fcn_i`).
+
+There is no standardization on how names should be mangled, so different compilers will produce different mangled names.
 
 In **C**, you can only have one function with a specific name. If you write `void print(int x)`, the compiler literally names it `print` in the final compiled binary. The Linker (the tool that stitches your program together) just looks for `print`.
 
@@ -14,13 +16,9 @@ void print(std::string x);
 
 If the C++ compiler just exported all three of these as `print` to the compiled binary, the Linker would crash. 
 
-### 2. The Solution: Name Mangling
-
 To fix this, the C++ compiler takes your clean, human-readable names and **"mangles"** them. It squishes the function's name together with encoded information about its namespaces, classes, and parameter types to create a 100% unique string. The Linker never sees your C++ code; it only sees these mangled, unique IDs.
 
-### 3. How to Read a Mangled Name
-
-Different compilers (like MSVC for Windows, or GCC/Clang for Linux/Mac) have different rules for mangling. Let's look at the **Itanium ABI**, which is the standard used by GCC and Clang.
+ Let's look at the **Itanium ABI** Name Mangling, which is the standard used by GCC and Clang.
 
 ```cpp
 void calculate(int x);
@@ -34,8 +32,7 @@ Here is how to decode that:
 - **`calculate`**: The actual name of the function.
 - **`i`**: The code for the parameter type (`i` stands for `int`).
 
-#### A More Complex Example:
-
+A More Complex Example:
 ```cpp
 class Math {
 public:
@@ -52,7 +49,6 @@ This mangles to: **`_ZN4Math9calculatedcE`**
 - **`c`**: Second parameter is a `char`.
 - **`E`**: End of the nested name block.
 
-### 4. `extern "C"`
 
 Because C++ changes the names of everything, it creates a massive problem if you want to use a library written in C. If you include a C library that has a function `void connect();`, your C++ compiler will assume it is a C++ function and look for the mangled name `_Z7connectv` in the library. But because the library was compiled in C, the function is just named `connect`. The Linker will throw an `undefined reference` error. To stop the C++ compiler from mangling a name, you wrap it in `extern "C"`.
 
