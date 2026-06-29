@@ -322,13 +322,148 @@ Sequence of what compiler sees and understands:
 - `std::operator<<(std::cout, x);`
 
 ---
-### `using`
+### Qualified and unqualified names
 
-`using namespace std;` is generally bad in global scope, but there are things to look out for.
+A **qualified name** is a name that includes an associated scope. A name can be qualified by a class name using the scope resolution operator (::), or by a class object using the member selection operators (. or ->). For example:
 
-- **Bad:** `using namespace std;` (Global scope). Pollution.
-- **Good:** `using std::cout;` (Specific). Only imports what you need.
-- **Very Bad:** Putting `using namespace ...` inside a **Header File (`.h`)**.
-	If you do this in `myHeader.h`, any file which does `#include "myHeader.h"` gets their code polluted with that namespace.
+```cpp
+class C; // some class
+C::s_member; // s_member is qualified by class C
+obj.x; // x is qualified by class object obj
+ptr->y; // y is qualified by pointer to class object ptr
+```
+
+An **unqualified name** is a name that does not include a scoping qualifier. For example, `cout` and `x` are unqualified names, as they do not include an associated scope.
 
 ---
+### Using-declaration
+
+A **using declaration** allows us to use an unqualified name (with no scope) as an alias for a qualified name.
+
+```cpp
+#include <iostream>
+int main() {
+   using std::cout; // this using declaration tells the compiler that cout should resolve to std::cout
+   cout << "Hello world!\n"; // so no std:: prefix is needed here!
+} // the using declaration expires at the end of the current scope
+```
+
+The using-declaration `using std::cout;` tells the compiler that we’re going to be using the object `cout` from the `std` namespace. So whenever it sees `cout`, it will assume that we mean `std::cout`. If there’s a naming conflict between `std::cout` and some other use of `cout` that is visible from within `main()`, `std::cout` will be preferred. 
+
+Note that you will need a separate using-declaration for each name (e.g. one for `std::cout`, one for `std::cin`, etc…).
+
+The using-declaration is active from the point of declaration to the end of the scope in which it is declared.
+
+---
+### Using-directives
+
+A **using directive** allows _all_ identifiers in a given namespace to be referenced without qualification from the scope of the using-directive.
+
+For technical reasons, using-directives do not actually introduce new meanings for names into the current scope, instead they introduce new meanings for names into an outer scope (more details about which outer scope is picked can be found [here](https://quuxplusone.github.io/blog/2020/12/21/using-directive/)).
+
+```cpp
+#include <iostream>
+int main() {
+   using namespace std; // all names from std namespace now accessible without qualification
+   cout << "Hello world!\n"; // so no std:: prefix is needed here
+} // the using-directive ends at the end of the current scope
+```
+
+The using-directive `using namespace std;` tells the compiler that all of the names in the `std` namespace should be accessible without qualification in the current scope. When we then use unqualified identifier `cout`, it will resolve to `std::cout`.
+
+Using-directives are the solution that was provided for old pre-namespace codebases that used unqualified names for standard library functionality.  Problems with using-directives:
+1. Using-directives allow unqualified access to _all_ of the names from a namespace (potentially including lots of names you’ll never use).
+2. Using-directives do not prefer names from the namespace identified by the using-directive over other names (this behaviour is unlike using-declaration).
+
+
+- If a using-declaration or using-directive is used within a block, the names are applicable to just that block (it follows normal block scoping rules). This is a good thing, as it reduces the chances for naming collisions to occur to just within that block.
+- If a using-declaration or using-directive is used in a namespace (including the global namespace), the names are applicable to the entire rest of the file for global namespace and the namespace end bracket for other namespaces .
+
+
+Using-statements should not be placed anywhere where they might have an impact on code in a different file. Nor should they be placed anywhere where another file’s code might be able to impact them.
+
+For example, if you placed a using-statement in the global namespace of a header file, then every other file that `#included` that header would also get that using-statement. That’s clearly bad. This also applies to namespaces inside header files, for the same reason.
+
+An example for showing issue with ordering:
+
+FooInt.h:
+
+```cpp
+namespace Foo {
+    void print(int) { cout << "print(int)\n" << endl; }
+}
+
+```
+
+FooDouble.h:
+
+```cpp
+namespace Foo {
+    void print(double) { cout << "print(double)\n" << endl; }
+}
+```
+
+main.cpp (okay):
+
+```cpp
+#include <iostream>
+#include "FooDouble.h"
+#include "FooInt.h"
+
+using Foo::print; // print means Foo::print
+
+int main() {
+    print(5);  // Calls Foo::print(int)
+}
+```
+
+main.cpp (bad):
+
+```cpp
+#include <iostream>
+#include "FooDouble.h"
+using Foo::print; //  before the #include directive #include "FooInt.h"
+#include "FooInt.h"
+
+int main() {
+    print(5);  // Calls Foo::print(double)
+}
+```
+
+In the working version, when the compiler encounters `using Foo::print`, it has already seen both `Foo::print(int)` and `Foo::print(double)`, so it makes both available to be called as just `print()`. Since `Foo::print(int)` is a better match than `Foo::print(double)`, it calls `Foo::print(int)`.
+
+In the bad version, when the compiler encounters `using Foo::print`, it has only seen a declaration for `Foo::print(double)`, so it only makes `Foo::print(double)` available to be called unqualified. So when we call `print(5)` only `Foo::print(double)` is even eligible to be matched. Thus `Foo::print(double)` is the one that gets called!
+
+So never put using-statements before `#include` directives and don't use them in header files.
+
+
+Once a using-statement has been declared, there’s no way to cancel or replace it with a different using-statement within the scope in which it was declared.
+
+```cpp
+int main() {
+    using namespace Foo;
+    // there's no way to cancel the "using namespace Foo" here!
+    // there's also no way to replace "using namespace Foo" with a different using statement
+} // using namespace Foo ends here
+```
+
+The best you can do is this
+
+```cpp
+int main() {
+    {
+        using namespace Foo;
+        // 
+    } 
+    {
+        using namespace Goo;
+        //
+    } 
+}
+```
+
+
+Avoid using-directives altogether (except `using namespace std::literals` to access the `s` and `sv` literal suffixes). Using-declarations are okay in .cpp files, after the `#include` directives.
+
+----
+

@@ -34,7 +34,7 @@ void printWallet(const Wallet& w) {
 ---
 ### 3. `mutable` Keyword 
 
-Sometimes, you need to modify a variable inside a `const` function (e.g., for debugging, logging, or thread locks (you can then lock the mutex inside a const function)).  The `mutable` keyword allows a specific member variable to be changed **even if the object is const**.
+Sometimes, you need to modify a variable inside a `const` function (e.g., for debugging, logging, or thread locks (you can then lock the mutex inside a const function)).  The `mutable` keyword allows a specific member variable to be changed **even if the object is const** ( const class objects can only call const functions).
 
 ```cpp
 class Database {
@@ -66,10 +66,11 @@ void processImage(const Image& img) {
 ---
 ### 5. Const Return Types
 
-For fundamental types, the `const` qualifier on a return type is simply ignored (your compiler may generate a warning), but it is useful for returning references to internal data safely.
+For returning by value, the `const` qualifier on a return type is simply ignored (your compiler may generate a warning), because the temporary copy being const is useless.
 
-Returning a const value can also impede certain kinds of compiler optimiations (involving move semantics), which can result in better performance.
+ Though `const` is useful for returning references to internal data safely.
 
+Returning a const value can also impede certain kinds of compiler optimizations (involving move semantics), which can result in better performance.
 
 ```cpp
 class Student {

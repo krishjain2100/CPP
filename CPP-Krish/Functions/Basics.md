@@ -63,4 +63,36 @@ int main() {
 When a function is referred to by name (without parenthesis), C++ converts the function into a function pointer (holding the address of the function). Then `operator<<` tries to print the function pointer, which it fails at because `operator<<` does not know how to print function pointers. The standard says that in this case, `foo` should be converted to a `bool` (which `operator<<` does know how to print). And since the function pointer for `foo` is a non-null pointer, it should always evaluate to Boolean `true`. Thus, this should print: 1
 
 ----
+### The order of evaluation of operands (including function arguments) is mostly unspecified
 
+In most cases, the order of evaluation for operands and function arguments is unspecified, meaning they may be evaluated in any order.
+
+```cpp
+a * b + c * d // converts to the expression below first
+(a * b) + (c * d)
+```
+
+ If `a` is `1`, `b` is `2`, `c` is `3`, and `d` is `4`, this expression will always compute the value `14`.
+However, the precedence and associativity rules only tell us how operators and operands are grouped and the order in which value computation will occur. They do not tell us the order in which the operands or subexpressions are evaluated. The compiler is free to evaluate operands `a`, `b`, `c`, or `d` in any order. The compiler is also free to calculate `a * b` or `c * d` first.
+
+For most expressions, this is irrelevant. But it is possible to write expressions where the order of evaluation does matter. Consider the following program"
+
+```cpp
+int getValue() {
+    std::cout << "Enter an integer: ";
+    int x{};
+    std::cin >> x;
+    return x;
+}
+
+void printCalculation(int x, int y, int z) {
+    std::cout << x + (y * z);
+}
+
+int main() {
+    printCalculation(getValue(), getValue(), getValue()); 
+    // this line is ambiguous
+}
+```
+
+The Clang compiler evaluates arguments in left-to-right order. The GCC compiler evaluates arguments in right-to-left order. So x, y, z, could get the values in different orders. Therefore avoid things like that and precalculate the functions value in a variable before putting them in the arguments.

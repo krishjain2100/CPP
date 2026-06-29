@@ -39,10 +39,9 @@ Since constant expressions are always capable of being evaluated at compile-time
 **The compiler is only _required_ to evaluate constant expressions at compile-time in contexts that _require_ a constant expression.** But modern compilers will _usually_ evaluate a constant expression at compile-time when optimisations are enabled.
 
 ```cpp
-const int x { 3 + 4 }; // constant expr 3 + 4 must be evaluated at compile-time
+const int x { 3 + 4 }; // constant expr 3 + 4 must be evaluated at compile-time, because integral values with constant expression intializer can be usedin constant expressions so their values must be figured out at compile time
 int y { 3 + 4 };   // constant expr 3 + 4 may be evaluated at compile-time or runtime
 ```
-**(This feels wrong, in the first example 3 + 4 should not necessarily be evaluated at compile time)**
 
 The likelihood that an expression is fully evaluated at compile-time can be categorised as follows:
 - Never: A non-constant expression where the compiler is not able to determine all values at compile-time.
@@ -50,7 +49,7 @@ The likelihood that an expression is fully evaluated at compile-time can be cate
 - Likely: A constant expression used in a context that does not require a constant expression.
 - Always: A constant expression used in a context that requires a constant expression.
 
-So why doesn’t C++ require all constant expressions to be evaluated at compile-time? There are at least two good reasons:
+So why doesn’t C++ require all constant expressions to be evaluated at compile-time? 
 1. Compile-time evaluation makes debugging harder. 
 2. To provide the compiler with the flexibility to optimise as it sees fit (or as influenced by compiler options). For example, a compiler might want to offer an option that defers all non-required constant expression evaluation to runtime, in order to improve compile times for developers.
 
@@ -73,7 +72,7 @@ We have to go inspect the definitions of those initializers and infer what case 
 
 Second, use of `const` does not provide a way to inform the compiler that we require a variable that is usable in a constant expression (and that it should halt compilation if it isn’t). Instead, it will just silently create a variable that can only be used in runtime expressions.
 
-Third, the use of `const` to create compile-time constant variables does not extend to non-integral variables. And there are many cases where we would like non-integral variables to be compile-time constants too.
+Third, the use of `const` to create compile-time constant variables does not extend to non-integral variables
 
 #### Constexpr
 
@@ -90,7 +89,7 @@ int main() {
     std::cout << "Enter your age: ";
     int age{};
     std::cin >> age;
-    constexpr int myAge { age }; // compile error: age is not a constant expression
+    constexpr int myAge { age }; // compile error: age is not a constant expr
     constexpr int f { five() };  // compile error: return value of five() is not constexpr
 
     return 0;

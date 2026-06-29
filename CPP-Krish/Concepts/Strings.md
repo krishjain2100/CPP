@@ -14,6 +14,8 @@ While C-style string literals are fine to use, C-style string variables behave o
 ### `std::string`
 
 - If `std::string` doesn’t have enough memory to store a string (maybe because of reassignment), it will request additional memory (at runtime) using dynamic memory allocation. This ability to acquire additional memory is part of what makes `std::string` so flexible, but also comparatively slow.
+- Although `std::string` is required to be null-terminated (as of C++11), the returned length of a `std::string` does not include the implicit null-terminator character.
+- Note that `std::string::length()` returns an unsigned integral value (most likely of type `size_t`). If you want to assign the length to an `int` variable, you should `static_cast` it to avoid compiler warnings about signed/unsigned conversions.
 - To read a full line of input into a string, you’re better off using the `std::getline()` function instead. `std::getline()` requires two arguments: the first is `std::cin`, and the second is your string variable.
 - The `std::ws` input manipulator tells `std::cin` to ignore any leading whitespace before extraction.
 
@@ -68,18 +70,8 @@ When you enter a value using `operator>>`, `std::cin` captures the string `"2
 `std::ws` is not preserved across calls like other manipulators like `std::setprecision()`, it has to be stated again and again for use.
 
 ---
-
-Although `std::string` is required to be null-terminated (as of C++11), the returned length of a `std::string` does not include the implicit null-terminator character.
-
-Note that `std::string::length()` returns an unsigned integral value (most likely of type `size_t`). If you want to assign the length to an `int` variable, you should `static_cast` it to avoid compiler warnings about signed/unsigned conversions.
-
----
-####  `std::string` as function argument
-In most cases, use a `std::string_view` parameter instead, otherwise expensive copy created
-
----
 #### Returning a `std::string`
-**DID NOT UNDERSTAND FULLY**
+**(Read again after Move Semantics)**
 
 When a function returns by value to the caller, the return value is normally copied from the function back to the caller. So you might expect that you should not return `std::string` by value, as doing so would return an expensive copy of a `std::string`.
 
@@ -93,18 +85,18 @@ However, as a rule of thumb, it is okay to return a `std::string` by value whe
 In most other cases, prefer to avoid returning a `std::string` by value, as doing so will make an expensive copy.
 
 If returning a C-style string literal, use a `std::string_view` return type instead.
-In certain cases, `std::string` may also be returned by (const) reference, which is another way to avoid making a copy. discuss later in [12.12 -- Return by reference and return by address](https://www.learncpp.com/cpp-tutorial/return-by-reference-and-return-by-address/) and [14.6 -- Access functions](https://www.learncpp.com/cpp-tutorial/access-functions/).
+In certain cases, `std::string` may also be returned by (const) reference, which is another way to avoid making a copy.
 
 ---
 #### Literals for `std::string`
 
 - Double-quoted string literals (like “Hello, world!”) are C-style strings by default (and thus, have a strange type).
-
+- 
 - Use a `s` suffix after the double quotes instead. it should be lower case
 	The “s” suffix lives in the namespace `std::literals::string_literals`.
 	The most concise way to access the literal suffixes is via using-directive `using namespace std::literals`, however this imports many unnecessary things as well. So use `using namespace std::string_literals`, which imports only the literals for `std::string`
 
-- You probably won’t need to use `std::string` literals very often (as it’s fine to initialse a `std::string` object with a C-style string literal), but we’ll see a few cases in future lessons (involving type deduction) where using `std::string` literals instead of C-style string literals makes things easier (see [10.8 -- Type deduction for objects using the auto keyword](https://www.learncpp.com/cpp-tutorial/type-deduction-for-objects-using-the-auto-keyword/) for an example).
+- You probably won’t need to use `std::string` literals very often (as it’s fine to initialise a `std::string` object with a C-style string literal), but we’ll see a few cases in future lessons (involving type deduction) where using `std::string` literals instead of C-style string literals makes things easier
 
 - `"Hello"s` resolves to `std::string { "Hello", 5 }` which creates a temporary `std::string` initialised with C-style string literal “Hello”
 
@@ -119,7 +111,9 @@ int main() {
 
 ---
 ### Constexpr Strings
-If you try to define a `constexpr std::string`, your compiler will probably generate an error, This happens because `constexpr std::string` isn’t supported at all in C++17 or earlier, and only works in very limited cases in C++20/23. If you need constexpr strings, use `std::string_view`
+
+If you try to define a `constexpr std::string`, your compiler will probably generate an error, This happens because `constexpr std::string` isn’t supported at all in C++17 or earlier, and only works in very limited cases in C++20/23. 
+If you need constexpr strings, use `std::string_view`
 
 ---
 ### std::string_view (C++17)
@@ -129,10 +123,9 @@ To address the issue with `std::string` being expensive to initialize (or copy
 A `std::string_view` object can be initialised with a C-style string, a `std::string`, or another `std::string_view`.
 Both a C-style string and a `std::string` will implicitly convert to a `std::string_view` when passed as an argument to a `std::string_view. 
 
----
-#### `std::string_view` will not implicitly convert to `std::string`
+Assignment changes what the `std::string_view` is viewing. It changes the internal pointer and size, not the string it is viewing.
 
-This is because `std::string` makes a copy of its initializer (which is expensive and we don't want it to happen accidentally). However, if this is desired, we have two options:
+`std::string_view` will not implicitly convert to `std::string` is because `std::string` makes a copy of its initializer (which is expensive and we don't want it to happen accidentally). However, if this is desired, we have two options:
 1. Explicitly create a `std::string` with a `std::string_view` initializer
 2. Convert an existing `std::string_view` to a `std::string` using `static_cast`
 
@@ -151,12 +144,20 @@ int main() {
 }
 ```
 
----
-#### Assignment changes what the `std::string_view` is viewing
-It changes the internal pointer and size, not the string it is viewing.
+#### Constexpr
+Unlike `std::string`, `std::string_view` has full support for constexpr
+
+```cpp
+constexpr std::string_view s{ "Hello, world!" };
+// s is a string symbolic constant
+cout << s << '\n'; 
+// s will be replaced with "Hello, world!" at compile-time
+```
+
 
 ---
 #### Literals for `std::string_view`
+
 - We can create string literals with type `std::string_view` by using a `sv` suffix after the double-quoted string literal. The `sv` must be lower case.
 - `sv` resides in namespace `std::literals::string_view::literals`, use `using namespace std::string_view_literals` just like in string
 
@@ -179,26 +180,15 @@ Conceptually: `std::string temp{"goo\n"};` So this actually creates a `std::stri
 `"moo\n"sv` is approximately `std::string_view{"moo\n", 4}`. The characters still live in static storage. 
 
 ---
-#### Constexpr
-Unlike `std::string`, `std::string_view` has full support for constexpr
 
-```cpp
-constexpr std::string_view s{ "Hello, world!" };
-// s is a string symbolic constant
-cout << s << '\n'; 
-// s will be replaced with "Hello, world!" at compile-time
-```
-
----
-#### `std::string` is a (sole) owner
+`std::string` is a (sole) owner
 In programming, when we call an object an owner, we generally mean that it is the sole owner (unless otherwise specified). Sole ownership (also called single ownership) ensures it is clear who has responsibility for that data.
 
-#### `std::string_view` is a viewer
+`std::string_view` is a viewer
 A view is dependent on the object being viewed. If the object being viewed is modified or destroyed while the view is still being used, unexpected or undefined behavior will result.
 A `std::string_view` that is viewing a string that has been destroyed is sometimes called a **dangling** view.
 
-#### Should I prefer `std::string_view` or `const std::string&` function parameters? 
-Prefer `std::string_view` in most cases. We cover this topic further in lesson [12.6 -- Pass by const lvalue reference](https://www.learncpp.com/cpp-tutorial/pass-by-const-lvalue-reference/#stringparameter).
+`std::string_view` vs `const std::string&` function parameters is covered in [[3. References]]
 
 ---
 ### Improperly using `std::string_view`(Important)

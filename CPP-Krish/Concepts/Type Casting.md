@@ -22,7 +22,9 @@ It tells the compiler:
     - Child* to Base* ? Yes.
     - `std::string` to `int`? **No** (Compile Error).
     - `UnrelatedClassA*` to `UnrelatedClassB*`? **No** (Compile Error).
-- Uses direct-initialization.
+- Uses **direct-initialization**.
+
+Since static_cast uses direct initialization, any explicit constructors of the target class type will be considered when initializing the temporary object to be returned. We discuss explicit constructors in lesson [14.16 -- Converting constructors and the explicit keyword](https://www.learncpp.com/cpp-tutorial/converting-constructors-and-the-explicit-keyword/)
 
 #### Down-casting is dangerous
 - **Upcasting (Child -> Base):** Always safe. Implicit.
@@ -243,4 +245,46 @@ When you write a C-style cast `(Type)variable`resolves it by trying a strict seq
 - **Example:** `const int*` to `float*`.
 - **Result if it stops here:** Absolute maximum danger. You have bypassed every single safeguard in the language.
 
+There is one thing you can do with a C-style cast that you can’t do with C++ casts: 
+C-style casts can convert a derived object to a base class that is inaccessible (e.g. because it was privately inherited).
+
 ---
+### Casting vs initializing a temporary object
+
+Let’s say we have some variable `x` that we need to convert to an `int`. There are two conventional ways we can do this:
+
+1. `static_cast<int>(x)`, which returns a temporary `int` object _direct-initialized_ with `x`.
+2. `int { x }`, which creates a temporary `int` object _direct-list-initialized_ with `x`.
+
+We should avoid `int ( x )`, which is a C-style cast. This will return a temporary `int` direct-initialized with the value of `x` (like we’d expect from the syntax), but it also has the other downsides as discussed.
+
+There are (at least) three notable differences between the `static_cast` and the direct-list-initialized temporary:
+
+1. `int { x }` uses list initialization, which disallows narrowing conversions. This is great when initializing a variable, because we rarely intend to lose data in such cases. But when using a cast, it is presumed we know what we’re doing, and if we want to do a cast that might lose some data, we should be able to do that. The narrowing conversion restriction can be an impediment in this case.
+
+```cpp
+// We want to do fp division, so one of the operands needs to be a fp type
+std::cout << double{x} / y << '\n'; 
+// okay if int is 32-bit, narrowing if x is 64-bit
+```
+
+2. `static_cast` makes it clearer that we are intending to perform a conversion. Although the `static_cast` is more verbose than the direct-list-initialized alternative, in this case, that’s a good thing, as it makes the conversion easier to spot and search for. That ultimately makes your code safer and easier to understand.
+
+3. Direct-list-initialization of a temporary only allows single-word type names. Due to a weird syntax quirk, there are several places within C++ where only single-word type names are allowed (the C++ standard calls these names “simple type specifiers”). So while `int { x }` is a valid conversion syntax, `unsigned int { x }` is not.
+
+```cpp
+	unsigned char c { 'a' };
+	std::cout << unsigned int { c } << '\n'; // compile-error
+```
+
+Workaround:
+
+```cpp
+	unsigned char c { 'a' };
+	using uint = unsigned int;
+	std::cout << uint { c } << '\n';
+```
+
+For all these reasons, we generally prefer `static_cast` over direct-list-initialization of a temporary.
+
+----
