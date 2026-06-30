@@ -25,8 +25,7 @@ A non-zero status code is often used to indicate some kind of failure (and while
 
 `EXIT_SUCCESS` and `EXIT_FAILURE` are preprocessor macros defined in the`<cstdlib>` header
 
-If you want to maximiwe portability, you should only use `0` or `EXIT_SUCCESS` to indicate a successful termination, or `EXIT_FAILURE` to indicate an unsuccessful termination.
-
+If you want to maximize portability, you should only use `0` or `EXIT_SUCCESS` to indicate a successful termination, or `EXIT_FAILURE` to indicate an unsuccessful termination.
 
 **Note**: The only exception to the rule that a value-returning function must return a value via a return statement is for function `main()`. The function `main()` will implicitly return the value `0` if no return statement is provided. 
 
@@ -60,7 +59,7 @@ int main() {
 }
 ```
 
-When a function is referred to by name (without parenthesis), C++ converts the function into a function pointer (holding the address of the function). Then `operator<<` tries to print the function pointer, which it fails at because `operator<<` does not know how to print function pointers. The standard says that in this case, `foo` should be converted to a `bool` (which `operator<<` does know how to print). And since the function pointer for `foo` is a non-null pointer, it should always evaluate to Boolean `true`. Thus, this should print: 1
+When a function is referred to by name (without parenthesis), C++ converts the function into a function pointer (holding the address of the function). Then `operator<<` tries to print the function pointer, which it fails at because `operator<<` does not know how to print function pointers. The standard says that in this case, `foo` should be converted to a `bool` (which `operator<<` does know how to print). And since the function pointer for `foo` is a non-null pointer, it should always evaluate to Boolean `true`. Thus, this should print: `1`
 
 ----
 ### The order of evaluation of operands (including function arguments) is mostly unspecified
@@ -96,3 +95,5 @@ int main() {
 ```
 
 The Clang compiler evaluates arguments in left-to-right order. The GCC compiler evaluates arguments in right-to-left order. So x, y, z, could get the values in different orders. Therefore avoid things like that and precalculate the functions value in a variable before putting them in the arguments.
+
+---

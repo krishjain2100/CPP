@@ -1,6 +1,5 @@
 ### 1. Function Pointers 
 
-
 The syntax for creating a function pointer is ugly:
 
 ```cpp

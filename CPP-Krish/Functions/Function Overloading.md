@@ -1,4 +1,4 @@
-**Function overloading** allows us to create multiple functions with the same name, so long as each identically named function has different parameter types (or the functions can be otherwise differentiated). Each function sharing a name (in the same scope) is called an **overloaded function** (sometimes called an **overload** for short).
+**Function overloading** allows us to create multiple functions with the same name, so long as each identically named function has different parameter types (or the functions can be otherwise differentiated). Each function sharing a name (in the same scope) is called an **overloaded function**.
 
 When a function call is made to a function that has been overloaded, the compiler will try to match the function call to the appropriate overload based on the arguments used in the function call. This is called **overload resolution**.
 
@@ -42,9 +42,8 @@ void foo(int x, ...); // differentiated from foo(int, int)
 Thus a call to `foo(4, 5)` will match to `foo(int, int)`, not `foo(int, ...)`.
 
 
-A function’s return type is not considered when differentiating overloaded functions because if you saw the function call, you cannot decide which one to call. This was an intentional choice, as it ensures the behavior of a function call can be determined independently from the rest of the expression, making understanding complex expressions much simpler. Put another way, we can always determine which version of a function will be called based solely on the arguments in the function call. If return values were used for differentiation, then we wouldn’t have an easy syntactic way to tell which overload of a function was being called, we’d also have to understand how the return value was being used, which requires a lot more analysis.
+A function’s return type is not considered when differentiating overloaded functions because if you saw the function call, you cannot decide which one to call. But now, we can always determine which version of a function will be called based solely on the arguments in the function call. 
 
----
 For member functions, additional function-level qualifiers are also considered: As an example, a const member function can be differentiated from an otherwise identical non-const member function (even if they share the same set of parameters).
 
 | Function-level qualifier | Used for overloading |
@@ -52,9 +51,7 @@ For member functions, additional function-level qualifiers are also considered: 
 | const or volatile        | Yes                  |
 | Ref-qualifiers           | Yes                  |
 
----
-
-A function’s **type signature** (generally called a **signature**) is defined as the parts of the function header that are used for differentiation of the function. In C++, this includes the function name, number of parameters, parameter type, and function-level qualifiers. It notably does _not_ include the return type.
+A function’s **type signature** (generally called a **signature**) is defined as the parts of the function header that are used for differentiation of the function. In C++, this includes the function name, number of parameters, parameter type, and function-level qualifiers. It notably does _not_ include the return type or the argument name.
 
 -----
 ### Resolving overloaded function calls
@@ -107,7 +104,6 @@ int main() {
 #### Step 2:
 If no exact match is found, the compiler tries to find a match by applying numeric promotion to the argument(s). We covered how certain narrow integral and floating point types can be automatically promoted to wider types, such as `int` or `double`. If, after numeric promotion, a match is found, the function call is resolved.
 
-
 ```cpp
 void foo(int) {}
 void foo(double) {}
@@ -117,8 +113,6 @@ int main(){
     foo(4.5f); // promoted to match foo(double)
 }
 ```
-
-For `foo('a')`, because an exact match for `foo(char)` could not be found in the prior step, the compiler promotes the char `'a'` to an `int`, and looks for a match. This matches `foo(int)`, so the function call resolves to `foo(int)`.
 
 #### Step 3:
 If no match is found via numeric promotion, the compiler tries to find a match by applying numeric conversion to the arguments.
@@ -130,11 +124,10 @@ void foo(std::string) {}
 int main() {
     foo('a'); // 'a' converted to match foo(double)
 }
+
+// In this case, because there is no `foo(char)` (exact match), and no `foo(int)` (promotion match), the `'a'` is numerically converted to a double and matched with `foo(double)`.
+
 ```
-
-In this case, because there is no `foo(char)` (exact match), and no `foo(int)` (promotion match), the `'a'` is numerically converted to a double and matched with `foo(double)`.
-
-**Key insight : Matches made by applying numeric promotions take precedence over any matches made by applying numeric conversions.**
 
 #### Step 4:
 If no match is found via numeric conversion, the compiler tries to find a match through any user-defined conversions. Certain types (e.g. classes) can define conversions to other types that can be implicitly invoked.
@@ -154,11 +147,7 @@ int main() {
 }
 ```
 
-In this example, the compiler will first check whether an exact match to `foo(X)` exists. We haven’t defined one. Next the compiler will check whether `x` can be numerically promoted, which it can’t. The compiler will then check if `x` can be numerically converted, which it also can’t. Finally, the compiler will then look for any user-defined conversions. Because we’ve defined a user-defined conversion from `X` to `int`, the compiler will convert `X` to an `int` to match `foo(int)`.
-
 After applying a user-defined conversion, the compiler may apply additional implicit promotions or conversions to find a match. So if our user-defined conversion had been to type `char` instead of `int`, the compiler would have used the user-defined conversion to `char` and then promoted the result into an `int` to match.
-
-We discuss how to create user-defined conversions for class types (by overloading the typecast operators) in lesson [21.11 -- Overloading typecasts](https://www.learncpp.com/cpp-tutorial/overloading-typecasts/).
 
 The constructor of a class also acts as a user-defined conversion from other types to that class type, and can be used during this step to find matching functions.
 
@@ -186,8 +175,7 @@ int main(){
 
 Since literal `5L` is of type `long`, the compiler will first look to see if it can find an exact match for `foo(long)`, but it will not find one. Next, the compiler will try numeric promotion, but values of type `long` can’t be promoted, so there is no match here either.
 
-Following that, the compiler will try to find a match by applying numeric conversions to the `long` argument. In the process of checking all the numeric conversion rules, the compiler will find two potential matches. If the `long` argument is numerically converted into an `int`, then the function call will match `foo(int)`. If the `long` argument is instead converted into a `double`, then it will match `foo(double)` instead. Since two possible matches via numeric conversion have been found, the function call is considered ambiguous.
-
+Following that, the compiler will try to find a match by applying numeric conversions to the `long` argument. In the process of checking all the numeric conversion rules, the compiler will find two potential matches. Therefore, function call is considered ambiguous.
 
 Here’s another example that yields ambiguous matches:
 
@@ -196,23 +184,12 @@ void foo(unsigned int){}
 void foo(float){}
 
 foo(0);   // int can be numerically converted to unsigned int or to float
-foo(3.14159);  // double can be numerically converted to unsigned int or to float
+foo(3.14159); // double can be numerically converted to unsigned int or to float
 ```
 
 Although you might expect `0` to resolve to `foo(unsigned int)` and `3.14159` to resolve to `foo(float)`, both of these calls result in an ambiguous match. The `int` value `0` can be numerically converted to either an `unsigned int` or a `float`, so either overload matches equally well, and the result is an ambiguous function call.
 
-The same applies for the conversion of a `double` to either a `float` or `unsigned int`. Both are numeric conversions, so either overload matches equally well, and the result is again ambiguous.
-
-Default arguments can also cause ambiguous matches. We cover such cases in lesson [11.5 -- Default arguments](https://www.learncpp.com/cpp-tutorial/default-arguments/).
-
-----
-### Resolving ambiguous matches
-
-Because ambiguous matches are a compile-time error, an ambiguous match needs to be disambiguated before your program will compile. There are a few ways to resolve ambiguous matches:
-
-1. Define a new overloaded function that takes parameters of exactly the type you are trying to call the function with. Then C++ will be able to find an exact match for the function call.
-2. Explicitly cast the ambiguous argument(s) to match the type of the function you want to call. For example, to have `foo(0)` match `foo(unsigned int)` in the above example, you would do this:
-3. If your argument is a literal, you can use the literal suffix to ensure your literal is interpreted as the correct type:
+Because ambiguous matches are a compile-time error, an ambiguous match needs to be disambiguated before your program will compile.
 
 ---
 ### Matching for functions with multiple arguments
@@ -255,10 +232,9 @@ int main() {
 Key insight: `= delete` means “I forbid this”, not “this doesn’t exist”.
 Deleted function participate in all stages of function overload resolution (not just in the exact match stage). If a deleted function is selected, then a compilation error results.
 
-
 Other types of functions can be similarly deleted. We discuss deleting member functions in lesson [14.14 -- Introduction to the copy constructor](https://www.learncpp.com/cpp-tutorial/introduction-to-the-copy-constructor/), and deleting function template specializations in lesson [11.7 -- Function template instantiation](https://www.learncpp.com/cpp-tutorial/function-template-instantiation/).
 
-#### Deleting all non-matching overloads Advanced
+#### Deleting all non-matching overloads
 
 There may be times when we want a certain function to be called only with arguments whose types exactly match the function parameters. We can do this by using a function template (introduced in upcoming lesson [11.6 -- Function templates](https://www.learncpp.com/cpp-tutorial/function-templates/)) as follows:
 
@@ -280,7 +256,6 @@ int main() {
 ```
 
 ---
-
 ### Default Arguments
 
 Note that you must use the equals sign to specify a default argument. Using parenthesis or brace initialization won’t work:
@@ -291,15 +266,12 @@ void goo(int x ( 5 )); // compile error
 void boo(int x { 5 }); // compile error
 ```
 
-Perhaps surprisingly, default arguments are handled by the compiler at the call site. Default arguments are inserted by the compiler at site of the function call.
-
-Default arguments are useful in cases where we need to add a new parameter to an existing function. 
+Default arguments are handled by the compiler at the call site. They are inserted by the compiler at site of the function call. They are useful in cases where we need to add a new parameter to an existing function. 
 
 A function can have multiple parameters with default arguments. 
 1. In a function call, any explicitly provided arguments must be the leftmost arguments (arguments with defaults cannot be skipped).
 2. If a parameter is given a default argument, all subsequent parameters (to the right) must also be given default arguments.
 3. If more than one parameter has a default argument, the leftmost parameter should be the one most likely to be explicitly set by the user.
-
 
 Once declared, a default argument can not be redeclared in the same translation unit. That means for a function with a forward declaration and a function definition, the default argument can be declared in either the forward declaration or the function definition, but not both.
 
@@ -342,17 +314,6 @@ Now consider this case:
 void print(int x);                  // signature print(int)
 void print(int x, int y = 10);      // signature print(int, int)
 void print(int x, double y = 20.5); // signature print(int, double)
-```
-
-Default values (not arguments) are not part of a function’s signature, so these function declarations are differentiated overloads.
-
-
-Default arguments can easily lead to ambiguous function calls:
-
-```cpp
-void print(int x);                  // signature print(int)
-void print(int x, int y = 10);      // signature print(int, int)
-void print(int x, double y = 20.5); // signature print(int, double)
 
 int main() {
     print(1, 2);   // will resolve to print(int, int)
@@ -361,7 +322,9 @@ int main() {
 }
 ```
 
-In the case where we mean to call `print(int, int)` or `print(int, double)` we can always explicitly specify the second parameter. But what if we want to call `print(int)`? It’s not obvious how we can do so. There is a way though
+Default values (not arguments) are not part of a function’s signature, so these function declarations are differentiated overloads.
+
+Default arguments can easily lead to ambiguous function calls. In the case where we mean to call `print(int, int)` or `print(int, double)` we can always explicitly specify the second parameter. But what if we want to call `print(int)`? It’s not obvious how we can do so. There is a way though.
 
 Default arguments don’t work for functions called through function pointers
 We cover this topic in lesson [20.1 -- Function Pointers](https://www.learncpp.com/cpp-tutorial/function-pointers/). Because default arguments are not considered using this method, this also provides a workaround to call a function that would otherwise be ambiguous due to default arguments.

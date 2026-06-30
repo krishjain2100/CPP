@@ -1,8 +1,8 @@
 In C++, the template system was designed to simplify the process of creating functions (or classes) that are able to work with different data types.
 
-Just like a normal definition, a **template** definition describes what a function or class looks like. Unlike a normal definition (where all types must be specified), in a template we can use one or more placeholder types. A placeholder type represents some type that is not known at the time the template is defined, but that will be provided later (when the template is used).
+A **template** definition describes what a function or class looks like. In a template we can use one or more placeholder types. A placeholder type represents some type that is not known at the time the template is defined, but that will be provided later (when the template is used).
 
-Once a template is define/d, the compiler can use the template to generate as many overloaded functions (or classes) as needed, each using different actual types.
+Once a template is defined, the compiler can use the template to generate as many overloaded functions (or classes) as needed, each using different actual types.
 
 The end result is, we end up with a bunch of mostly-identical functions or classes (one for each set of different types). But we only have to create and maintain a single template, and the compiler does all the hard work to create the rest for us.
 
@@ -13,7 +13,7 @@ Templates can work with types that didn’t even exist when the template was wri
 
 The initial function template that is used to generate other functions is called the **primary template**, and the functions generated from the primary template are called **instantiated functions**.
 
-When we create a primary function template, we use **placeholder types** (technically called **type template parameters**, informally called **template types**) for any parameter types, return types, or types used in the function body that we want to be specified later, by the user of the template.
+When we create a function template, we use **placeholder types** (called **template types**) for any parameter types, return types, or types used in the function body that we want to be specified later, by the user of the template.
 
 C++ supports 3 different kinds of template parameters:
 - Type template parameters (where the template parameter represents a type).
@@ -110,7 +110,7 @@ Just like normal functions, function templates can have default arguments for no
 ---
 
 **Instantiated function may give compile errors and thus not compile.**
-**Instantiated functions may not always make sense semantically**
+**Instantiated functions may not always make sense semantically**.
 The compiler will successfully compile an instantiated function template as long as it makes sense syntactically.
 
 ```cpp
@@ -121,7 +121,7 @@ std::cout << addOne("Hello, world!") << '\n';
 // "ello, world!"
 
 std::string hello{"Hello, world!"};
-std::cout << addOne(hello); //compiler error, std::string cannot be added to int
+std::cout << addOne(hello); // compiler error, std::string cannot be added to int
 ```
 
 Perhaps surprisingly, because C++ syntactically allows addition of an integer value to a string literal (we cover this in future lesson [17.9 -- Pointer arithmetic and subscripting](https://www.learncpp.com/cpp-tutorial/pointer-arithmetic-and-subscripting/)), the above example compiles
@@ -249,7 +249,7 @@ auto max(auto x, auto y) {
 }
 ```
 
-There isn’t a concise way to use abbreviated function templates when you want more than one auto parameter to be the same type. That is, there isn’t an easy abbreviated function template for something like this:
+There isn’t a concise way to use abbreviated function templates when you want more than one auto parameter to be the same type.
 
 ---
 ### Function templates may be overloaded
