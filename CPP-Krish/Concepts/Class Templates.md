@@ -382,3 +382,86 @@ void print(const Coord& c)  {
 This is no different than if we’d used `Pair` or `Pair<T>` instead of `Coord` or `Coord<T>`.
 
 ---
+### Class templates with member functions
+
+Type template parameters defined as part of a class template parameter declaration can be used both as the type of data members and as the type of member function parameters.
+
+Example:
+
+```cpp
+template <typename T>
+class Pair {
+private:
+    T m_f{};
+    T m_s{};
+public:
+    Pair(const T& f, const T& s) : m_f{ f } , m_s{ s } {}
+    bool isEqual(const Pair<T>& pair);
+};
+
+// When we define a member function outside the class definition,
+// we need to resupply a template parameter declaration
+template <typename T>
+bool Pair<T>::isEqual(const Pair<T>& pair) {
+    return m_f == pair.m_f && m_s == pair.m_s;
+}
+
+int main() {
+    Pair p1{5,6}; // uses CTAD to infer type Pair<int>
+    cout << p1.isEqual(Pair{5,6}) << '\n';
+    cout << p1.isEqual(Pair{5,7}) << '\n';
+}
+```
+
+First, because our class has private members, it is not an aggregate, and therefore can’t use aggregate initialization. Instead, we have to initialize our class objects using a constructor.
+
+Note that when we define a member function inside the class template definition, we don’t need to provide a template parameter declaration for the member function. Such member functions implicitly use the class template parameter declaration.
+
+Second, we don’t need deduction guides for CTAD to work with non-aggregate classes. 
+A matching constructor provides the compiler with the information it needs to deduce the template parameters from the initializers.
+
+Third, let’s look more closely at the case where we define a member function for a class template outside of the class template definition:
+
+```cpp
+template <typename T>
+bool Pair<T>::isEqual(const Pair<T>& pair) {
+    return m_f == pair.m_f && m_s == pair.m_s;
+}
+```
+
+Since this member function definition is separate from the class template definition, we need to resupply a template parameter declaration (`template <typename T>`) so the compiler knows what `T` is. Also, when we define a member function outside of the class, we need to qualify the member function name with the fully templated name of the class template (`Pair<T>::isEqual`, not `Pair::isEqual`).
+
+---
+#### Injected class names
+
+In a prior lesson, we noted that the name of a constructor must match the name of the class. But in our class template for `Pair<T>` above, we named our constructor `Pair`, not `Pair<T>`. Somehow this still works, even though the names don’t match.
+
+Within the scope of a class, the unqualified name of the class is called an **injected class name**. In a class template, the injected class name serves as shorthand for the fully templated name.
+
+Because `Pair` is the injected class name of `Pair<T>`, within the scope of our `Pair<T>` class template, any use of `Pair` will be treated as if we had written `Pair<T>` instead. Therefore, although we named the constructor `Pair`, the compiler treats it as if we had written `Pair<T>` instead. The names now match.
+
+This means that we can also define our `isEqual()` member function like this:
+
+```cpp
+template <typename T>
+// note the parameter has type Pair, not Pair<T>
+bool Pair<T>::isEqual(const Pair& pair)  { 
+    return m_f == pair.m_f && m_s == pair.m_s;
+}
+```
+
+
+ We noted that CTAD doesn’t work with function parameters (as it is argument deduction, not parameter deduction). However, using an injected class name as a function parameter is okay, as it is shorthand for the fully templated name, not a use of CTAD.
+
+---
+#### Where to define member functions for class templates outside the class
+
+With member functions for class templates, the compiler needs to see both the class definition and the template member function definition.
+
+When a member function template is defined _inside_ the class definition, the template member function definition is part of the class definition. This makes things easy (at the cost of cluttering our class definition).
+
+When a member function template is defined _outside_ the class definition, it should generally be defined immediately below the class definition. In the typical case where a class is defined in a header file, this means any member function templates defined outside the class should also be defined in the same header file, below the class definition.
+
+We noted that functions implicitly instantiated from templates are implicitly inline. This includes both non-member and member function templates. Therefore, there is no issue including member function templates defined in header files into multiple code files, as the functions instantiated from those templates will be implicitly inline (and the linker will de-duplicate them).
+
+---
