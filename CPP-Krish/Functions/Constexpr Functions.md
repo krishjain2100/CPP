@@ -110,8 +110,7 @@ int main() {
 When such functions are evaluated at compile-time, the compiler will essentially “execute” the function and return the calculated value.
 
 ---
-
-### Constexpr/consteval functions can use function parameters and local variables as arguments in constexpr function calls
+### Constexpr/Consteval functions can use function parameters and local variables as arguments in constexpr function calls
 
 Above, we noted, “When a constexpr (or consteval) function is being evaluated at compile-time, any other functions it calls are required to be evaluated at compile-time.”
 
@@ -162,9 +161,18 @@ As an aside: Prior to C++23, the C++ standard says that a constexpr function mus
 A **pure function** is a function that:
 - Always returns the same return result when given the same arguments
 - The function has no side effects (e.g. it doesn’t change the value of static local or global variables, doesn’t do input or output, etc…).
-
 Pure functions should generally be made constexpr.
-Constexpr functions don’t always need to be pure. In C++23, constexpr functions can use and modify static local variables. Since the value of a static local persists across function calls, modifying a static local variable is considered a side-effect.
+
+Prior to C++23, writing a non-const `static` local variable inside a `constexpr` function resulted in an immediate compiler error. 
+
+C++23 relaxed this restriction. You are now allowed to declare non-literal and `static` variables inside a `constexpr` function, but their behavior depends entirely on the execution context.
+- **At Runtime:** If the `constexpr` function is called during standard runtime execution, it can use and modify the `static` local variable. 
+- **At Compile-Time:** If you attempt to evaluate the function in a constant expression context, and the control flow reaches the non-const `static` local variable, it will give compile error.
+
+Also, inside constexpr function:
+- non-const globals cannot be read or modified (or else order of compile time execution would start to matter).
+- const globals with constexpr initializers or constexpr variables can be read, but cannot be modified (const can never be modified).
+- const globals with non-constexpr initializers are intialized after linking and everything so cannot be read at compile time obviously.
 
 ---
 ### Why not constexpr every function?

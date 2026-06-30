@@ -58,12 +58,14 @@ It would still be useful to have a convenient way to force constexpr functions t
 
 
 ```cpp
-#define CONSTEVAL(...) [] consteval { return __VA_ARGS__; }()               // C++20 version per Jan Scultke (https://stackoverflow.com/a/77107431/460250)
-#define CONSTEVAL11(...) [] { constexpr auto _ = __VA_ARGS__; return _; }() // C++11 version per Justin (https://stackoverflow.com/a/63637573/460250)
+#define CONSTEVAL(...) [] consteval { return __VA_ARGS__; }()               
+// C++20 version 
+#define CONSTEVAL11(...) [] { constexpr auto _ = __VA_ARGS__; return _; }() 
+// C++11 version 
 
 constexpr int compare(int x, int y)  {
-    if (std::is_constant_evaluated()) return (x > y ? x : y);
-    else return (x < y ? x : y);
+    if (std::is_constant_evaluated()) return (x > y ? x : y) // max
+    else return (x < y ? x : y);  // min
 }
 
 int main() {
@@ -78,7 +80,7 @@ int main() {
 ```
 
 This uses a variadic preprocessor macro (the `#define`, `...`, and `__VA_ARGS__`) to define an consteval lambda that is immediately invoked (by the trailing parentheses).  
-You can find information on variadic macros at [https://en.cppreference.com/w/cpp/preprocessor/replace](https://en.cppreference.com/w/cpp/preprocessor/replace).  
+You can find information on variadic macros at [CPP reference](https://en.cppreference.com/w/cpp/preprocessor/replace/).
 We cover lambdas in lesson [20.6 -- Introduction to lambdas (anonymous functions)](https://www.learncpp.com/cpp-tutorial/introduction-to-lambdas-anonymous-functions/).
 
 The following should also work (and is a bit cleaner since it doesn’t use preprocessor macros):
@@ -88,8 +90,8 @@ There is a bug in GCC 14 onward that causes the following example to produce the
 consteval auto CONSTEVAL(auto value) { return value; }
 
 constexpr int compare(int x, int y)  {
-    if (std::is_constant_evaluated()) return (x > y ? x : y);
-    else return (x < y ? x : y);
+    if (std::is_constant_evaluated()) return (x > y ? x : y); // max
+    else return (x < y ? x : y); // min
 }
 
 int main() {
@@ -98,7 +100,7 @@ int main() {
 }
 ```
 
-Because the arguments of consteval functions are always manifestly constant evaluated, if we call a constexpr function as an argument to a consteval function, that constexpr function must be evaluated at compile-time! The consteval function then returns the result of the constexpr function as its own return value, so the caller can use it.
+Because the arguments of consteval functions are always manifestly constant evaluated, if we call a constexpr function as an argument to a consteval function, that constexpr function must be evaluated at compile-time. The consteval function then returns the result of the constexpr function as its own return value, so the caller can use it.
 
 Note that the consteval function returns by value. While this might be inefficient to do at runtime (if the value was some type that is expensive to copy, e.g. `std::string`), in a compile-time context, it doesn’t matter because the entire call to the consteval function will simply be replaced with the calculated return value.
 
