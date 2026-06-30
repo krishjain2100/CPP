@@ -1,4 +1,3 @@
-
 Unlike functions, type definitions can’t be overloaded. The compiler will give a redefinition error if you declare a class twice with different members
 
 A class type is a struct, class, or union type. Although we’ll be demonstrating class templates on struct, everything here applies equally well to classes.
@@ -204,9 +203,11 @@ template <typename T, typename U>
 Pair(T, U) -> Pair<T, U>;
 ```
 
-First, we use the same template type definition as in our `Pair` class. This makes sense, because if our deduction guide is going to tell the compiler how to deduce the types for a `Pair<T, U>`, we have to define what `T` and `U` are (template types). Second, on the right hand side of the arrow, we have the type that we’re helping the compiler to deduce. In this case, we want the compiler to be able to deduce template arguments for objects of type `Pair<T, U>`, so that’s exactly what we put here. Finally, on the left side of the arrow, we tell the compiler what kind of declaration to look for. In this case, we’re telling it to look for a declaration of some object named `Pair` with two arguments (one of type `T`, the other of type `U`). We could also write this as `Pair(T t, U u)` (where `t` and `u` are the names of the parameters, but since we don’t use `t` and `u`, we don’t need to give them names).
+First, we use the same template type definition as in our `Pair` class. This makes sense, because if our deduction guide is going to tell the compiler how to deduce the types for a `Pair<T, U>`, we have to define what `T` and `U` are (template types). 
 
-Putting it all together, we’re telling the compiler that if it sees a declaration of a `Pair` with two arguments (of types `T` and `U` respectively), it should deduce the type to be a `Pair<T, U>`.
+Second, on the right hand side of the arrow, we have the type that we’re helping the compiler to deduce. In this case, we want the compiler to be able to deduce template arguments for objects of type `Pair<T, U>`, so that’s exactly what we put here.
+
+Finally, on the left side of the arrow, we tell the compiler what kind of declaration to look for. In this case, we’re telling it to look for a declaration of some object named `Pair` with two arguments (one of type `T`, the other of type `U`). We could also write this as `Pair(T t, U u)` (where `t` and `u` are the names of the parameters, but since we don’t use `t` and `u`, we don’t need to give them names).
 
 So when the compiler sees the definition `Pair p2{ 1, 2 };` in our program, it will say, “oh, this is a declaration of a `Pair` and there are two arguments of type `int` and `int`, so using the deduction guide, I should deduce this to be a `Pair<int, int>`“.
 
@@ -229,7 +230,6 @@ int main() {
     // CTAD used to deduce Pair<int> from the initializers (C++17)
 }
 ```
-
 
 C++20 added the ability for the compiler to automatically generate deduction guides for aggregates, so deduction guides should only need to be provided for C++17 compatibility.
 
@@ -282,7 +282,7 @@ int main() {
 CTAD stands for class template _argument_ deduction, not class template _parameter_ deduction, so it will only deduce the type of template arguments, not template parameters. Therefore, CTAD can’t be used in function parameters.
 
 ```cpp
-void print(std::pair p)  {// compile error, CTAD can't be used here
+void print(std::pair p)  { // compile error, CTAD can't be used here
     std::cout << p.first << ' ' << p.second << '\n';
 }
 
@@ -360,7 +360,7 @@ int main() {
 
 Things worth noting about this example:
 - Unlike normal type aliases (which can be defined inside a block), alias templates must be defined in the global scope (as all templates must).
-- rior to C++20, we must explicitly specify the template arguments when we instantiate an object using an alias template. As of C++20, we can use **alias template deduction**, which will deduce the type of the template arguments from an initializer in cases where the aliased type would work with CTAD.
+- Prior to C++20, we must explicitly specify the template arguments when we instantiate an object using an alias template. As of C++20, we can use **alias template deduction**, which will deduce the type of the template arguments from an initializer in cases where the aliased type would work with CTAD.
 - Because CTAD doesn’t work on function parameters, when we use an alias template as a function parameter, we must explicitly define the template arguments used by the alias template. In other words, we do this:
 
 ```cpp
