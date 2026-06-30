@@ -9,8 +9,7 @@ struct Fraction {
 };
 ```
 
-
-Every code file that uses a program-defined type needs to see the full type definition before it is used. A forward declaration is not sufficient. This is required so that the compiler knows how much memory to allocate for objects of that type. Therefore type definitions are partially exempt from the one-definition rule (ODR): a given type is allowed to be defined in multiple code files. This is the reason why we can import `<iostream>` in multiple files as we are importing all of the  input/output type definitions into multiple files.
+Every code file that uses a program-defined type needs to see the full type definition before it is used. A forward declaration is not sufficient. This is required so that the compiler knows how much memory to allocate for objects of that type. Therefore type definitions are partially exempt from the one-definition rule (ODR). This is the reason why we can import `<iostream>` in multiple files as we are importing all of the input/output type definitions into multiple files.
 
 There are two caveats that are worth knowing about:
 1. You can still only have one type definition per code file
@@ -23,7 +22,7 @@ A program-defined type used in multiple code files should be defined in a header
 
 The term “user-defined type” is not defined in the C++ language standard. In casual conversation, the term tends to mean “a type defined within your own programs” (such as the Fraction type example above).
 
-The C++ language standard uses the term “user-defined type” in a non-conventional manner. In the language standard, a “user-defined type” is any class type or enumerated type that is defined by you, the standard library, or the implementation (e.g. types defined by the compiler to support language extensions). Perhaps counter-intuitively, this means `std::string` (a class type defined in the standard library) is considered to be a user-defined type!
+In the language standard, a “user-defined type” is any class type or enumerated type that is defined by you, the standard library, or the implementation (e.g. types defined by the compiler to support language extensions). Counter-intuitively, this means `std::string` (a class type defined in the standard library) is considered to be a user-defined type!
 
 To provide additional differentiation, the C++20 language standard helpfully defines the term “program-defined type” to mean class types and enumerated types that are not defined as part of the standard library, implementation, or core language. In other words, “program-defined types” only include class types and enum types that are defined by us (or a third-party library).
 

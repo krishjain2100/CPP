@@ -1,3 +1,13 @@
+### Three sets of types:
+The first two are built-in to the language itself (and do not require the inclusion of a `.h` to use):
+
+- The **fundamental data types** provide the most the basic and essential data types.
+- The **compound data types** provide more complex data types and allow for the creation of custom (user-defined) types. 
+- The third (and largest) set of types is provided by the C++ standard library.
+
+---
+### Fundamental Data Types
+
 The C++ language comes with many predefined data types and are called the **fundamental data types**. Example:
 
 | Types                                                                              | Category            | Meaning                                          | Example |
@@ -12,14 +22,6 @@ The C++ language comes with many predefined data types and are called the **fun
 - A notable omission from the table of fundamental types above is a data type to handle **strings**. This is because in modern C++, strings are part of the standard library.
 - The **standard integer types** are `short`, `int`, `long`, `long long` (including their signed and unsigned variants).
 - The **integral types** are `bool`, the various char types, and the standard integer types. In the context of C++, "integral" is used to mean “like an integer”.  These types are considered to be integral types because these types store their values as integer values.
-
----
-### **Three sets of types:**
-The first two are built-in to the language itself (and do not require the inclusion of a header to use):
-
-- The **fundamental data types** provide the most the basic and essential data types.
-- The **compound data types** provide more complex data types and allow for the creation of custom (user-defined) types. 
-- The third (and largest) set of types is provided by the C++ standard library.
 
 ---
 ### Void
@@ -273,5 +275,33 @@ Use `std::cout << std::fixed` to avoid auto conversions to scientific notation.
 | IEEE 754 double-precision (8 bytes)     | ±2.23e-308 to ±1.80e308 and 0.0   | 15-18 significant digits, typically 16 |
 | x87 extended-precision (80 bits)        | ±3.36e-4932 to ±1.18e4932 and 0.0 | 18-21 significant digits               |
 | IEEE 754 quadruple-precision (16 bytes) | ±3.36e-4932 to ±1.18e4932 and 0.0 | 33-36 significant digits               |
+
+---
+### Compound Data Types
+
+Compound data type  are defined in terms of other existing data types.
+
+Every data type is either a fundamental type or a compound type. The C++ language standard explicitly defines which category each type falls into.
+
+C++ supports the following compound types:
+
+- Functions
+- C-style Arrays
+- Pointer types:
+    - Pointer to object
+    - Pointer to function
+- Pointer to member types:
+    - Pointer to data member
+    - Pointer to member function
+- Reference types:
+    - L-value references
+    - R-value references
+- Enumerated types:
+    - Un-scoped enumerations
+    - Scoped enumerations
+- Class types:
+    - Structs
+    - Classes
+    - Unions
 
 ---
