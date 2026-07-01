@@ -103,7 +103,11 @@ The element type of a `std::vector` must not be defined as const (e.g. `std::
 The standard library containers were not designed to have const elements.
 A containers const-ness comes from const-ing the container itself, not the elements. 
 
-One of the biggest downsides of `std::vector` is that it cannot be made `constexpr`. 
+One of the biggest downsides of `std::vector` is that it cannot be made `constexpr` just like `std::string`. 
+
+In C++20, there were updates so you can allocate memory dynamically at compile time, but all memory allocated during compile time must be freed before compile time finishes. The compiler cannot take memory allocated during compilation and hand it over to the runtime environment.
+Example: using them inside constexpr functions. Compiler will handle all dynamic allocations and reallocations.
+
 If you need a `constexpr` array, use `std::array`.
 
 ---
