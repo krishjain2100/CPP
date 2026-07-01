@@ -275,9 +275,12 @@ for (; begin != end; ++begin)
 	std::cout << *begin << ' ';
 ```
 
+You might be tempted to calculate the end marker using the address-of operator and array syntax like so: `int* end{ &arr[std::size(arr)] };` But this causes undefined behavior, because `arr[std::size(arr)]` implicitly dereferences an element that is off the end of the array. Instead do what is shown above.
+
 For a pointer that is pointing to a C-style array element, pointer arithmetic is valid so long as the resulting address is the address of a valid array element, or one-past the last element. If pointer arithmetic results in an address beyond these bounds, it is undefined behavior (even if the result is not dereferenced). It is just the way it is **(I don't know why)**
 
-Internally, range-based for loop are  implemented exactly like we did using `begin` and `end`.
+Internally, range-based for loop are  implemented exactly like we did using `begin` and `end`. For any type, it just replaces `auto x : obj` syntax with a for a loop from `obj.begin()` to `obj.end()`. So to have range-based for loop functionality for your own class, implement `.begin()`, `.end()` member functions.
+
 ```cpp
 constexpr int arr[]{ 9, 7, 5, 3, 1 };
 for (auto e : arr)  // iterate from `begin` up to (but excluding) `end`
