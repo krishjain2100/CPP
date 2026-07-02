@@ -38,7 +38,7 @@ auto isEven { [](int i) {
 return std::all_of(array.begin(), array.end(), isEven);
 ```
 
-Lambdas don’t have a type that we can explicitly use. When we write a lambda, the compiler generates a unique type just for the lambda that is not exposed to us. In actuality, lambdas aren’t functions (which is part of how they avoid the limitation of C++ not supporting nested functions). They’re a special kind of object called a functor. Functors are objects that contain an overloaded `operator()` that make them callable like a function.
+Lambdas don’t have a type that we can explicitly use. When we write a lambda, the compiler generates a unique type just for the lambda (it uses a new type even if two lambdas are exactly same) that is not exposed to us. In actuality, lambdas aren’t functions (which is part of how they avoid the limitation of C++ not supporting nested functions). They’re a special kind of object called a functor. Functors are objects that contain an overloaded `operator()` that make them callable like a function.
 
 
 Although we don’t know the type of a lambda, there are several ways of storing a lambda for use post-definition:

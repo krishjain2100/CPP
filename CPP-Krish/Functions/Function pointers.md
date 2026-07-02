@@ -160,30 +160,55 @@ The _auto_ keyword can  infer the type of a function pointer, just like you'd 
 ---
 ### Performance Cost 
 
-`std::function`comes with a massive cost when you assign a lambda to a `std::function`. 
-It needs to store that lambda object inside itself. It will copy the object if it is an lvalue (expensive) or move it, if rvalue. 
+Let's see what happens when you assign a lambda to a `std::function` in C++,
 
-- If the lambda only captures couple of `int`, `std::function` can usually fit it inside its own small buffer (Small Object Optimisation).
-- But if the lambda captures a lot of variables, `std::function` is forced to  call `new` and allocate memory on the **Heap** to store the objec
+When you write a lambda, the compiler generates a unique anonymous class (often called a **closure type**). If your lambda captures variables, those variables become **member variables** of this generated class. The code inside the lambda becomes the `operator()` method of that class. Every single lambda has a **completely unique type**, even if two lambdas have the exact same signature and captures.
 
-It also does **Type Erasure**. It does not remember the type of the Callable that was used to initialize it. It just remembers the signature (arguments, return type) of the function that will be called. Also it stores tables and stuff to figure out what to call at runtime. So inlining is not possible because we don't know what it will pointing to at runtime.
+Because every lambda has a different, unnameable type, you cannot easily store different lambdas in an array or reassign them to a single variable. `std::function<int(int)>` solves this by acting as a universal wrapper for _any_ callable object that takes an `int` and returns an `int`. But how does it store an object whose type it doesn't know at compile time? It uses a technique called **Type Erasure**.
 
+Suppose you do:
+`std::function<int(int)> func = [x](int y) { return x + y; };` 
+This is what happens now:
 
-Using Templates:
+#### Step A: Templated Constructor is Invoked
 
-```cpp
-// The Template Way: Blazing fast, zero heap allocation, perfectly inlined.
-template <typename Callable>
-void executeTask(Callable myLambda) {
-    myLambda();
-}
+`std::function` has a templated constructor that accepts any type `T` (in this case, our hidden lambda class). Because it is a template, the constructor _temporarily_ knows the exact type and size of the lambda.
 
-int main() {
-    int x = 10;
-    // We pass the lambda directly. The compiler perfectly deduces 
-    // the hidden class type and compiles a custom version of executeTask.
-    executeTask( [x]() { std::cout << x; } ); 
-}
-```
+#### Step B: Memory Allocation (and Small Object Optimization)
+
+`std::function` needs to store the lambda instance. It has two ways to do this, depending on the **size** of the lambda (which is dictated by how many variables you captured).
+
+- **Small Object Optimization (SOO):** Most implementations of `std::function` have a small internal byte array (typically 16 to 32 bytes). If your lambda's captured state is small enough to fit in this buffer, `std::function`  constructs the lambda _directly inside_ the `std::function` object. **No heap allocation occurs.**
+
+- **Heap Allocation:** If you captured a lot of variables (e.g., several large objects by value), the lambda will be too big for the internal buffer. In this case, `std::function` calls `new` to allocate memory on the heap, constructs the lambda there, and stores a pointer to it internally.
+
+#### Step C: Erasing the Type
+
+Now that the lambda is stored in memory, `std::function` needs a way to invoke it, copy it, and destroy it later, but it can't store the exact type `T` as a class member (otherwise `std::function` wouldn't be generic).
+
+It achieves this by storing pointers to "manager" or "trampoline" functions (often implemented via a hidden virtual table or raw function pointers).
+
+The templated constructor instantiates these helper functions for the specific lambda type `T`:
+
+1. **Invoker:** A function that casts the stored raw memory back to the lambda type `T` and calls `operator()`.
+2. **Destroyer:** A function that casts the memory back to `T` and calls its destructor (and frees the heap memory if it was dynamically allocated).
+3. **Copier:** A function that knows how to safely copy `T`.
+
+`std::function` saves pointers to these helper functions. The knowledge of the original lambda type `T` is now erased from the data structure and lives only inside these specialized function pointers.
+
+### 4. What Happens at Invocation
+
+When you finally call `func(5);`, the following occurs:
+1. `std::function` looks up its internal **Invoker** function pointer.
+2. It passes the raw memory (either the internal small buffer or the heap pointer) and the argument (`5`) to this invoker.
+3. The invoker casts the raw memory back into the `__Lambda_Hidden_Name_123` type.
+4. It executes the lambda's `operator()`.
+
+### Summary of the Overhead
+
+Assigning a lambda to `std::function` is incredibly powerful, but it comes with a cost compared to using raw lambdas or function pointers:
+- **Allocation Cost:** If the lambda captures too much data, it triggers a heap allocation (slow).
+- **Size Cost:** A `std::function` object is typically 32-64 bytes (to hold the small buffer and function pointers), whereas a capture-less lambda is 1 byte.
+- **Invocation Cost:** Calling a `std::function` requires an indirect call (through a function pointer or vtable), which usually prevents the compiler from inlining the lambda's code.
 
 ---
