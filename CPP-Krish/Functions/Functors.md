@@ -21,3 +21,5 @@ int main() {
     std::cout << acc(10) << "\n"; // Prints 15 (It remembered the 5!)
 }
 ```
+
+---

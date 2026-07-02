@@ -325,7 +325,7 @@ auto ref2 { std::reference_wrapper{ x }}; // C++17
 But since `std::ref()` and `std::cref()` are shorter to type, they are still widely used to create `std::reference_wrapper` objects
 
 ---
-### std::array and enumerations
+### `std::array` and enumerations
 
 When initializing a `constexpr std::array` using CTAD, the compiler will deduce how long the array should be from the number of initializers. If less initializers are provided than there should be, the array will be shorter than expected, and indexing it can lead to undefined behavior.
 
@@ -477,7 +477,7 @@ int main() {
 ```
 
 ---
-### Multidimensional std::array
+### Multidimensional `std::array`
 
 There is no standard library multidimensional array class. But we can to something like this:
 
