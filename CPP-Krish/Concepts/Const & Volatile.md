@@ -1,4 +1,4 @@
-### 1. Const Variables
+### Const Variables
 
 A `const` variable cannot be changed after initialisation. It **must** be initialised when declared.
 The keyword can be written before or after the type, but the usual convention is to write before the type (like shown below).
@@ -8,7 +8,7 @@ const int maxScore = 100;
 ```
 
 ---
-### 2. Const Member Functions 
+### Const Member Functions 
 
 Putting `const` at the end of a function signature promises that the function will **not modify any member variables**. It mainly helps in maintaining correctness but also helps in minor compiler optimisations (some getters called multiple times can be called once only because we know it didn't get changed). If you do not write `const` at the end of the function name, the compiler assumes the function **WILL** change the object, even if the body is empty. If you have a `const Object`, you can **only** call `const` functions on it.
 
@@ -32,7 +32,7 @@ void printWallet(const Wallet& w) {
 ```
 
 ---
-### 3. `mutable` Keyword 
+### `mutable` Keyword 
 
 Sometimes, you need to modify a variable inside a `const` function (e.g., for debugging, logging, or thread locks (you can then lock the mutex inside a const function)).  The `mutable` keyword allows a specific member variable to be changed **even if the object is const** ( const class objects can only call const functions).
 
@@ -52,10 +52,6 @@ public:
 ---
 ### 4. Const Function Parameters (Pass by Const Reference)
 
-- **Pass by Value:** `void f(BigObj x)` -> **Slow** (Makes a copy).
-- **Pass by Reference:** `void f(BigObj& x)` -> **Fast** (No copy), but risky (function might change `x`).
-- **Pass by Const Reference:** `void f(const BigObj& x)` -> **Fast & Safe**.
-
 ```cpp
 void processImage(const Image& img) {
     // efficient (no copy)
@@ -64,11 +60,9 @@ void processImage(const Image& img) {
 ```
 
 ---
-### 5. Const Return Types
+### Const Return Types
 
-For returning by value, the `const` qualifier on a return type is simply ignored (your compiler may generate a warning), because the temporary copy being const is useless.
-
- Though `const` is useful for returning references to internal data safely.
+For returning by value, the `const` qualifier on a return type is simply ignored (your compiler may generate a warning), because the temporary copy being const is useless. Though `const` is useful for returning references to internal data safely.
 
 Returning a const value can also impede certain kinds of compiler optimizations (involving move semantics), which can result in better performance.
 
@@ -91,9 +85,9 @@ int main() {
 ```
 
 ---
-#### 6. `Volatile` Variables
+### `volatile` Variables
 
-In C++-23, there are only two type qualifiers (`const` and `volatile`).
+In C++23, there are only two type qualifiers (`const` and `volatile`).
 `volatile` tells the C++ compiler: _"This variable's value can change at any given microsecond from completely outside the program. Do not trust it, and do not optimise it."
 
 **Why we use it (The Optimisation Trap):** When you compile with optimisations (`-O2` or `-O3`), the compiler tries to make your code extremely fast by caching variables inside the CPU registers.
@@ -126,7 +120,7 @@ Note: **The Multithreading Trap**:  Many engineers mistakenly believe `volatile`
 - For multithreading, always use `std::atomic<int>` or `std::mutex`.
 
 ---
-### `Volatile` Member Functions
+### `volatile` Member Functions
 
 
 ---

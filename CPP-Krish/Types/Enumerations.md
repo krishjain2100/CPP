@@ -472,7 +472,7 @@ int main() {
 
 If the user did not enter a valid pet, then we handle that case by putting `std::cin` into “failure mode”. This is the state that `std::cin` typically goes into when an extraction fails. The caller can then check `std::cin` to see if the extraction succeeded or failed.
 
-In lesson [17.6 -- std::array and enumerations](https://www.learncpp.com/cpp-tutorial/stdarray-and-enumerations/), we show how we can use `std::array` to make our input and output operators less redundant, and avoid having to modify them when a new enumerator is added.
+We show how we can use `std::array` to make our input and output operators less redundant, and avoid having to modify them when a new enumerator is added in [[Arrays]].
 
 ---
 ### Issue with un-scoped enumerations

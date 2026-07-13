@@ -6,12 +6,6 @@ A namespace must be defined either in the global scope, or inside another namesp
 - Explicitness: std::sort tells the reader exactly where the tool came from.
 
 ---
-### Defining your own namespaces
-
-C++ allows us to define our own namespaces via the `namespace` keyword. Namespaces that you create in your own programs are casually called **user-defined namespaces**
-`namespace NamespaceIdentifier { // content }`. To access the contents of a namespace, we use [[Scope Resolution]]
-
----
 ### Identifier resolution from within a namespace
 
 If an identifier inside a namespace is used and no scope resolution is provided, the compiler will first try to find a matching declaration in that same namespace. If no matching identifier is found, the compiler will then check each containing namespace in sequence to see if a match is found, with the global namespace being checked last.
@@ -35,7 +29,7 @@ int main() {
 ---
 ### Multiple namespace blocks are allowed
 
-It’s legal to declare namespace blocks in multiple locations (either across multiple files, or multiple places within the same file). All declarations within the namespace are considered part of the namespace.
+It’s legal to declare namespace blocks in multiple locations (either across multiple files, or multiple places within the same file as they are exempt from ODR). All declarations within the namespace are considered part of the namespace.
 
 circle.h:
 ```cpp
@@ -71,7 +65,7 @@ int main() {
 
 The standard library makes extensive use of this feature, as each standard library header file contains its declarations inside a `namespace std` block contained within that header file. Otherwise the entire standard library would have to be defined in a single header file!
 
-Note that this capability also means you could add your own functionality to the `std` namespace. Doing so causes undefined behavior most of the time, because the `std` namespace has a special rule prohibiting extension from user code. Therefore do not add custom functionality to the std namespace.
+Note that this capability also means you could add your own functionality to the `std` namespace. Though doing so causes undefined behavior most of the time, because the `std` namespace has a special rule prohibiting extension from user code. Therefore do not add custom functionality to the std namespace.
 
 ---
 ### Nested namespaces
@@ -122,8 +116,6 @@ namespace Foo {
 Because typing the qualified name of a variable or function inside a nested namespace can be painful, C++ allows you to create **namespace aliases**, which allow us to temporarily shorten a long sequence of namespaces into something shorter:
 
 ```cpp
-#include <iostream>
-
 namespace Foo::Goo {
     int add(int x, int y) {
         return x + y;
@@ -138,6 +130,8 @@ int main() {
 
 ---
 ### Anonymous Namespaces 
+
+Named namespaces have external linkage, i.e, a particular named namespace is same across all the files in the program.
 
 All content declared in an unnamed namespace is treated as if it is part of the parent namespace. This might make unnamed namespaces seem useless. But unnamed namespaces gives it's content internal linkage. For functions, this is effectively the same as defining all functions as static functions. 
 
@@ -162,13 +156,12 @@ Now you include this header in `Game.cpp` to write the actual function.
 ```cpp
 // Game.cpp
 #include "common.h"
-
 void updatePlayer(PlayerData p) {
     p.health = 100;
 }
 ```
 
- The compiler internally renames the namespace to something unique, like `Namespace_GameCPP.` So, `Game.cpp` compiles a fn that looks this: 
+ The compiler internally renames the namespace to something unique, like `Namespace_GameCPP.` So, `Game.cpp` compiles a function that looks this: 
  `void updatePlayer(Namespace_GameCPP::PlayerData p)`
 
 Now you include the header in `main.cpp` because you want to use the struct and call that function.
@@ -185,7 +178,7 @@ int main() {
 
 The compiler renames the namespace in this file to something unique, like `Namespace_MainCPP`. So, `main.cpp` creates a variable of type `Namespace_MainCPP::PlayerData`. It then tries to call `updatePlayer` passing that exact type.
 
-But now linker won't find `updatePlayer(Namespace_MainCPP::PlayerData)`'s definition and give error
+But now linker won't find `updatePlayer(Namespace_MainCPP::PlayerData)`'s definition and give error. All this is because of internal linkage
 
 ---
 ### Inline namespaces
@@ -298,7 +291,7 @@ int main() {
 ---
 ### Argument Dependent Lookup (ADL)
 
-_**When you call a function, the compiler looks in the current scope AND in the namespaces of the function's arguments.** 
+**When you call a function, the compiler looks in the current scope AND in the namespaces of the function's arguments.** 
 
 ```cpp
 namespace Game {
@@ -376,13 +369,14 @@ Using-directives are the solution that was provided for old pre-namespace codeba
 2. Using-directives do not prefer names from the namespace identified by the using-directive over other names (this behaviour is unlike using-declaration).
 
 
-- If a using-declaration or using-directive is used within a block, the names are applicable to just that block (it follows normal block scoping rules). This is a good thing, as it reduces the chances for naming collisions to occur to just within that block.
-- If a using-declaration or using-directive is used in a namespace (including the global namespace), the names are applicable to the entire rest of the file for global namespace and the namespace end bracket for other namespaces .
+If a using-declaration or using-directive is used within a block, the names are applicable to just that block (it follows normal block scoping rules). This is a good thing, as it reduces the chances for naming collisions to occur to just within that block.
+
+If a using-declaration or using-directive is used in a namespace (including the global namespace), the names are applicable to the entire rest of the file for global namespace and the namespace end bracket for other namespaces .
 
 
 Using-statements should not be placed anywhere where they might have an impact on code in a different file. Nor should they be placed anywhere where another file’s code might be able to impact them.
 
-For example, if you placed a using-statement in the global namespace of a header file, then every other file that `#included` that header would also get that using-statement. That’s clearly bad. This also applies to namespaces inside header files, for the same reason.
+For example, if you placed a using-statement in the global namespace of a header file, then every other file that `#included` that header would also get that using-statement. That’s clearly bad. This also applies to namespaces inside header files, as some other file may open the namespace again (after `#including` it) to extend it's functionality, then they will have to deal with pollution.
 
 An example for showing issue with ordering:
 
@@ -422,7 +416,7 @@ main.cpp (bad):
 ```cpp
 #include <iostream>
 #include "FooDouble.h"
-using Foo::print; //  before the #include directive #include "FooInt.h"
+using Foo::print; 
 #include "FooInt.h"
 
 int main() {

@@ -19,7 +19,6 @@ int main() {
 
 Perhaps surprisingly, the parameters of a consteval function are not constexpr (even though consteval functions can only be evaluated at compile-time). This decision was made for the sake of consistency.
 
-
 ---
 ### `std::is_constant_evaluated` and `if consteval`
 Neither of these, tell you whether a function call is evaluating at compile-time or runtime
@@ -45,11 +44,8 @@ There are several reasons for such a behaviour:
 2. Optimizations should not change the observable behavior of a program (unless explicitly allowed by the standard). If `std::is_constant_evaluated()` were to return `true` when the function was evaluated at compile-time for any reason, then the optimizer deciding to evaluate a function at compile-time instead of runtime could potentially change the observable behavior of the function. As a result, your program might behave very differently depending on what optimization level it was compiled with.
 
 
-Introduced in C++23, `if consteval` is a replacement for the following. It provides a nicer syntax and fixes some other issues. However, it evaluates the same way.
-
-```cpp
-if (std::is_constant_evaluated())
-```
+`if consteval`(C++23) is a replacement for: `if (std::is_constant_evaluated())`.
+It provides a nicer syntax and fixes some other issues. However, it evaluates the same way.
 
 ---
 ### Forcing compile time evaluation
@@ -81,7 +77,6 @@ int main() {
 
 This uses a variadic preprocessor macro (the `#define`, `...`, and `__VA_ARGS__`) to define an consteval lambda that is immediately invoked (by the trailing parentheses).  
 You can find information on variadic macros at [CPP reference](https://en.cppreference.com/w/cpp/preprocessor/replace/).
-We cover lambdas in lesson [20.6 -- Introduction to lambdas (anonymous functions)](https://www.learncpp.com/cpp-tutorial/introduction-to-lambdas-anonymous-functions/).
 
 The following should also work (and is a bit cleaner since it doesn’t use preprocessor macros):
 There is a bug in GCC 14 onward that causes the following example to produce the wrong answer when any level of optimization is enabled.

@@ -2,7 +2,7 @@
 
 When a function call is made to a function that has been overloaded, the compiler will try to match the function call to the appropriate overload based on the arguments used in the function call. This is called **overload resolution**.
 
-In order for a program using overloaded functions to compile, two things have to be true:
+In order for a program using overlo  aded functions to compile, two things have to be true:
 1. Each overloaded function has to be differentiated from the others.
 2. Each call to an overloaded function has to resolve to an overloaded function.
 

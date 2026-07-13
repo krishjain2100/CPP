@@ -38,7 +38,7 @@ int main(){
 
 Allowing functions with a constexpr return type to be evaluated at either compile-time or runtime was allowed so that a single function can serve both cases. Otherwise, you’d need to have separate functions (a function with a constexpr return type, and a function with a non-constexpr return type). This would not only require duplicate code, the two functions would also need to have different names.
 
-Any constexpr function call that is part of a non-required constant expression may be evaluated at either compile-time or runtime. Therefore, compile time evaluation of constexpr functions that can be resolved at compile time is not mandated and depends on the level of optimzation used. This is because the compiler is _not_ required to determine whether a constexpr function is evaluatable at compile-time until it is actually evaluated at compile-time.
+Any constexpr function call that is part of a non-required constant expression may be evaluated at either compile-time or runtime. Therefore, compile time evaluation of constexpr functions that can be resolved at compile time is not mandated and depends on the level of optimization used. This is because the compiler is _not_ required to determine whether a constexpr function is evaluatable at compile-time until it is actually evaluated at compile-time.
 
 Example of a constexpr function that compiles successfully for runtime use, but then fails to compile when evaluated at compile-time.
 
@@ -56,7 +56,7 @@ int main() {
 }
 ```
 
-**As an aside:** Prior to C++23, if no argument values exist that would allow a constexpr function to be evaluated at compile-time, the program is ill-formed (no diagnostic required). Without the line `if (x < 0) return 0`, the above example would contain no set of arguments that allow the function to be evaluatable at compile-time, making the program ill-formed. Given that no diagnostic is required, the compiler may not enforce this. This requirement was revoked in C++23 ([P2448R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2448r1.html)).
+As an aside: Prior to C++23, the C++ standard says that a constexpr function must return a constexpr value for at least one set of arguments, otherwise it is technically ill-formed. Calling a non-constexpr function unconditionally in a constexpr function makes the constexpr function ill-formed. However, compilers are not required to generate errors or warnings for such cases, therefore, the compiler probably won’t complain unless you try to call such a constexpr function in a constant context. In C++23, this requirement was rescinded.
 
 So all constexpr functions should be evaluatable at compile-time, as they will be required to do so in contexts that require a constant expression.
 
@@ -68,9 +68,9 @@ C++ does not currently provide any reliable mechanisms to determine if a constex
 The parameters of a constexpr function are not implicitly constexpr, nor may they be declared as `constexpr`. Because such parameters are not constexpr, they cannot be used in constant expressions within the function.  Even `const` function parameters are treated as runtime constants. If you need parameters that are constant expressions, use Non-type template parameters.
 
 ---
-### Constexpr Functions are `inline` by deafault
+### Constexpr Functions are `inline` by default
 
-When a constexpr function is evaluated at compile-time, the compiler must be able to see the full definition of the constexpr function prior to such function calls (so it can perform the evaluation itself). A forward declaration will not suffice in this case, even if the actual function definition appears later in the same compilation unit. So constexpr functions are by defualt inline.
+When a constexpr function is evaluated at compile-time, the compiler must be able to see the full definition of the constexpr function prior to such function calls (so it can perform the evaluation itself). A forward declaration will not suffice in this case, even if the actual function definition appears later in the same compilation unit. So constexpr functions are by default inline.
 As a result, constexpr functions are often defined in header files, so they can be `#included` into any .cpp file that requires the full definition.
 
 Per [CWG2166](https://www.open-std.org/jtc1/sc22/wg21/docs/cwg_active.html#2166), the actual requirement for the forward declaration of constexpr functions that are evaluated at compile-time is that “the constexpr function must be defined prior to the outermost evaluation that eventually results in the invocation”. Therefore, this is allowed:
@@ -153,9 +153,6 @@ constexpr int someFn(bool b) {
 
 ```
 
-
-As an aside: Prior to C++23, the C++ standard says that a constexpr function must return a constexpr value for at least one set of arguments, otherwise it is technically ill-formed. Calling a non-constexpr function unconditionally in a constexpr function makes the constexpr function ill-formed. However, compilers are not required to generate errors or warnings for such cases, therefore, the compiler probably won’t complain unless you try to call such a constexpr function in a constant context. In C++23, this requirement was rescinded.
-
 ---
 
 A **pure function** is a function that:
@@ -167,12 +164,12 @@ Prior to C++23, writing a non-const `static` local variable inside a `constexpr`
 
 C++23 relaxed this restriction. You are now allowed to declare non-literal and `static` variables inside a `constexpr` function, but their behavior depends entirely on the execution context.
 - **At Runtime:** If the `constexpr` function is called during standard runtime execution, it can use and modify the `static` local variable. 
-- **At Compile-Time:** If you attempt to evaluate the function in a constant expression context, and the control flow reaches the non-const `static` local variable, it will give compile error.
+- **At Compile-Time:** If you attempt to evaluate the function in a constant expression context, and the control flow reaches the non-const `static` local variable, it will give compile error (as now do we continue with modified value in to runtime or reset it again ? ).
 
 Also, inside constexpr function:
 - non-const globals cannot be read or modified (or else order of compile time execution would start to matter).
 - const globals with constexpr initializers or constexpr variables can be read, but cannot be modified (const can never be modified).
-- const globals with non-constexpr initializers are intialized after linking and everything so cannot be read at compile time obviously.
+- const globals with non-constexpr cannot be read at compile time obviously.
 
 ---
 ### Why not constexpr every function?

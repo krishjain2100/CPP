@@ -297,7 +297,7 @@ C++ supports the following compound types:
     - L-value references
     - R-value references
 - Enumerated types:
-    - Un-scoped enumerations
+    - Unscoped enumerations
     - Scoped enumerations
 - Class types:
     - Structs
