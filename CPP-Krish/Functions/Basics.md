@@ -1,3 +1,13 @@
+
+**Function binding** (or **method binding**) is the process that determines what function definition is associated with a function call. The process of actually invoking a bound function is called **dispatching**. In C++, the term binding is used more casually (and dispatching is usually considered part of binding)
+
+In C++, when a direct call is made to a non-member function or a non-virtual member function, the compiler can determine which function definition should be matched to the call at compile-time itself. This is  called **early binding** (or **static binding**). Calls to overloaded functions and function templates can also be resolved at compile-time.
+
+Sometimes, a function call can’t be resolved until runtime. In C++, this is known as **late binding** (or in the case of virtual function resolution, **dynamic dispatch**).
+
+Late binding is slightly less efficient since it involves an extra level of indirection. With early binding, the CPU can jump directly to the function’s address. With late binding, the program has to read the address held in the pointer and then jump to that address. This involves one extra step, making it slightly slower. However, the advantage of late binding is that it is more flexible than early binding, because decisions about what function to call do not need to be made until runtime.
+
+---
 ### Nested functions
 
 A function whose definition is placed inside another function is a **nested function**.  Nested functions are not supported in C++.
