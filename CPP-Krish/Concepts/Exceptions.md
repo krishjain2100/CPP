@@ -613,4 +613,243 @@ In this case, the first three bullets above are trivially met.
 The fourth bullet is the key. It depends on the details of your program. If so (e.g. you can return a null pointer, or a status code to indicate failure), that’s probably the better choice. If not, then an exception would be reasonable.
 
 ---
+### Exception specifications and noexcept
 
+Looking at a typical function declaration, it is not possible to determine whether a function might throw an exception or not. If `doSomething()` can throw an exception, then calling it from a destructor is risky. Although we could have the destructor handle exceptions thrown by `doSomething()` (so those exceptions don’t propagate out of the destructor), we have to remember to do this, and we have to ensure we cover all the different types of exceptions that may be thrown.
+
+**Exception specifications** are a language mechanism that was originally designed to document what kind of exceptions a function might throw as part of a function specification. 
+While most of the exception specifications have now been deprecated or removed, one useful exception specification was added as a replacement: `noexcept`
+
+#### The noexcept specifier
+
+All functions are classified as either _non-throwing_ or _potentially throwing_. 
+A **non-throwing function** promises not to throw exceptions that are visible to the caller. 
+A **potentially throwing function** may throw exceptions that are visible to the caller.
+
+To define a function as non-throwing, we can use the **noexcept specifier**:
+
+```cpp
+void doSomething() noexcept; // this function is specified as non-throwing
+```
+
+Throwing inside is allowed so long as the noexcept function catches and handles those exceptions internally, and those exceptions do not exit the noexcept function.
+
+If an unhandled exception would exit a noexcept function, `std::terminate` will be called (even if there is an exception handler that could handle such an exception). 
+And if `std::terminate` is called from inside a noexcept function, stack unwinding may or may not occur (depending on implementation and optimizations), which means your objects may or may not be destructed properly prior to termination.
+
+This promise of no-throwing is not enforced by the compiler. So while calling a noexcept function should be safe, any exception handling bugs in the noexcept function that cause the contract to be broken will result in termination of the program. 
+
+Much like functions that differ only in their return values can not be overloaded, functions differing only in their exception specification can not be overloaded.
+
+The `noexcept` specifier has an optional Boolean parameter. `noexcept(true)` is equivalent to `noexcept`, meaning the function is non-throwing. `noexcept(false)` means the function is potentially throwing. These parameters are typically only used in template functions, so that a template function can be created as non-throwing or potentially throwing based on some parameterised value.
+
+**Which functions are non-throwing and potentially-throwing**
+
+Functions that are implicitly non-throwing:
+- Destructors
+
+Functions that are non-throwing by default for implicitly-declared or defaulted functions:
+- Constructors: default, copy, move
+- Assignments: copy, move
+- Comparison operators (as of C++20)
+
+However, if any of these functions call (explicitly or implicitly) another function which is potentially throwing, then the listed function will be treated as potentially throwing as well. For example, if a class has a data member with a potentially throwing constructor, then the class’s constructors will be treated as potentially throwing as well.
+
+Functions that are potentially throwing (if not implicitly-declared or defaulted):
+- Normal functions
+- User-defined constructors
+- User-defined operators
+
+#### The noexcept operator
+
+It takes an expression as an argument, and returns `true` or `false` if the compiler thinks it will throw an exception or not. The noexcept operator is checked statically at compile-time, and doesn’t actually evaluate the input expression. The noexcept operator can also be used inside expressions.
+
+
+```cpp
+void foo() {throw -1;}
+void boo() {};
+void goo() noexcept {};
+struct S{};
+
+constexpr bool b1{ noexcept(5 + 3) }; // true; ints are non-throwing
+constexpr bool b2{ noexcept(foo()) }; // false; foo() throws an exception
+constexpr bool b3{ noexcept(boo()) }; // false; it is implicitly noexcept(false)
+constexpr bool b4{ noexcept(goo()) }; // true; goo() is explicitly noexcept(true)
+constexpr bool b5{ noexcept(S{}) }; // true; default constructor is noexcept by default
+```
+
+The noexcept operator can be used to conditionally execute code depending on whether it is potentially throwing or not. This is required to fulfil certain **exception safety guarantees** (see below).
+
+---
+### Exception safety guarantees
+
+An **exception safety guarantee** is a contractual guideline about how functions or classes will behave in the event an exception occurs. There are four levels of exception safety guarantees:
+
+- No guarantee: There are no guarantees about what will happen if an exception is thrown (e.g. a class may be left in an unusable state)
+- Basic guarantee: If an exception is thrown, no memory will be leaked and the object is still usable, but the program may be left in a modified state.
+- Strong guarantee: If an exception is thrown, no memory will be leaked and the program state will not be changed. This means the function must either completely succeed or have no side effects if it fails. This is easy if the failure happens before anything is modified in the first place, but can also be achieved by rolling back any changes so the program is returned to the pre-failure state.
+- No throw / No fail guarantee: The function will always succeed (no-fail) or fail without throwing an exception that is exposed to the caller (no-throw). Exceptions may be thrown internally if not exposed. The `noexcept` specifier maps to this level of exception safety guarantee.
+
+The no-throw guarantee: if a function fails, then it won’t throw an exception. Instead, it will return an error code or ignore the problem. No-throw guarantees are required during stack unwinding when an exception is already being handled. For example, all destructors should have a no-throw guarantee (as should any functions those destructors call). Examples of code that should be no-throw:
+
+- destructors and memory deallocation/cleanup functions
+- functions that higher-level no-throw functions need to call
+
+The no-fail guarantee: a function will always succeed in what it tries to do (and thus never has a need to throw an exception, thus, no-fail is a slightly stronger form of no-throw). Examples of code that should be no-fail:
+
+- move constructors and move assignment 
+- swap functions
+- clear/erase/reset functions on containers
+- operations on `std::unique_ptr` 
+- functions that higher-level no-fail functions need to call
+
+
+There are a few good reasons to mark functions a non-throwing:
+- Non-throwing functions can be safely called from functions that are exception-intolerant, such as destructors
+- Functions that are noexcept can enable the compiler to perform some optimizations that would not otherwise be available. The compiler doesn’t have to worry about keeping the runtime stack in an unwindable state, which can allow it to produce faster code.
+- There are significant cases where knowing a function is noexcept allows us to produce more efficient implementations in our own code: the standard library containers (such as `std::vector`) are noexcept aware and will use the noexcept operator to determine whether to use `move semantics` (faster) or `copy semantics` (slower) in some places. 
+
+The standard library’s policy is to use `noexcept` only on functions that _must not_ throw or fail. Functions that are potentially throwing but do not actually throw exceptions (due to implementation) typically are not marked as `noexcept`.
+
+For your own code, always mark the following as `noexcept`:
+- Move constructors
+- Move assignment operators
+- Swap functions
+
+For your code, consider marking the following as `noexcept`:
+- Functions for which you want to express a no-throw or no-fail guarantee (e.g. to document that they can be safely called from destructors or other noexcept functions)
+- Copy constructors and copy assignment operators that are no-throw (to take advantage of optimizations).
+- Destructors. Destructors are implicitly noexcept as long as all members have noexcept destructors.
+
+---
+### Dynamic exception specifications
+
+Before C++11, and until C++17, _dynamic exception specifications_ were used in place of `noexcept`. The syntax used the `throw` keyword to list which exception types a function might directly or indirectly throw:
+
+```cpp
+int doSomething() throw(); // does not throw exceptions
+int doSomething() throw(std::out_of_range, int*); // may throw either std::out_of_range or a pointer to an integer
+int doSomething() throw(...); // may throw anything
+```
+
+Due to factors such as incomplete compiler implementations, some incompatibility with template functions, common misunderstandings about how they worked, and the fact that the standard library mostly didn’t use them, the dynamic exception specifications were deprecated in C++11 and removed from the language in C++17 and C++20. 
+
+---
+### `std::move_if_noexcept`
+
+All constructors should uphold the strong exception guarantee, so that the rest of the program won’t be left in an altered state if construction of an object fails.
+
+**The move constructors exception problem**
+
+When we are copying some object, and the copy fails for some reason (e.g. the machine is out of memory). The object being copied form is unchanged and we can discard the failed copy, and move on. The `strong exception guarantee` is upheld.
+
+Whereas a move operation transfers ownership of a given resource from the source to the destination object. If the move operation is interrupted by an exception after the transfer of ownership occurs, then our source object will be left in a modified state. For non-temporary objects, we’ve now damaged the source object. To comply with the `strong exception guarantee`, we’d need to move the resource back to the source object, but if the move failed the first time, there’s no guarantee the move back will succeed either.
+
+How can we give move constructors the `strong exception guarantee`? It is simple enough to avoid throwing exceptions in the body of a move constructor, but a move constructor may invoke other constructors that are potentially throwing. Take for example the move constructor for `std::pair`, which must try to move each sub-object in the source pair into the new pair object. Now lets use two classes, `MoveClass` and `CopyClass`, which we will `pair` together to demonstrate the `strong exception guarantee` problem with move constructors:
+
+```cpp
+#include <iostream>
+#include <utility> // For std::pair, std::make_pair, std::move, std::move_if_noexcept
+#include <stdexcept> // std::runtime_error
+
+class MoveClass {
+private:
+	int* m_resource{};
+public:
+	MoveClass() = default;
+	MoveClass(int resource) : m_resource{ new int{ resource }} {}
+	MoveClass(const MoveClass& that) {
+	    if (that.m_resource != nullptr) { 
+		    m_resource = new int{ *that.m_resource };
+		}
+	}
+	// Move constructor
+	MoveClass(MoveClass&& that) noexcept : m_resource{ that.m_resource } {
+		that.m_resource = nullptr;
+	}
+	~MoveClass() {
+	    std::cout << "destroying " << *this << '\n';
+	    delete m_resource;
+	}
+	friend std::ostream& operator<<(std::ostream& out, const MoveClass& mc){
+	    out << "MoveClass(";
+	    if (mc.m_resource == nullptr) { out << "empty"; }
+	    else { out << *mc.m_resource; }
+	    out << ')';
+	    return out;
+	}
+};
+
+
+class CopyClass {
+public:
+	bool m_throw{};
+	CopyClass() = default;
+	CopyClass(const CopyClass& that) : m_throw{ that.m_throw } {
+	    if (m_throw) throw std::runtime_error{ "abort!" };
+	}
+};
+
+int main() {
+	std::pair my_pair{ MoveClass{ 13 }, CopyClass{} };
+	std::cout << "my_pair.first: " << my_pair.first << '\n';
+	try {
+		my_pair.second.m_throw = true; // To trigger copy constructor exception
+	    // The following line will throw an exception
+	    std::pair moved_pair{ std::move(my_pair) }; 
+	    // We'll comment out this line later
+	    // std::pair moved_pair{ std::move_if_noexcept(my_pair) };
+	    // We'll uncomment this later
+	    std::cout << "moved pair exists\n"; // Never prints
+	}
+	catch (const std::exception& ex) { 
+		std::cerr << "Error found: " << ex.what() << '\n';
+	}
+	std::cout << "my_pair.first: " << my_pair.first << '\n';
+}
+// Output:
+	// destroying MoveClass(empty)
+	// my_pair.first: MoveClass(13)
+	// destroying MoveClass(13)
+	// Error found: abort!
+	// my_pair.first: MoveClass(empty)
+	// destroying MoveClass(empty)
+```
+
+The first printed line shows the temporary `MoveClass` object used to initialize `my_pair` gets destroyed as soon as the `my_pair` instantiation statement has been executed. It is `empty` since the `MoveClass` sub-object in `my_pair` was move constructed from it, demonstrated by the next line which shows `my_pair.first` contains the `MoveClass` object with value `13`.
+
+We created `moved_pair` by copy constructing its `CopyClass` sub-object (it doesn’t have a move constructor), but that copy construction threw an exception since we changed the Boolean flag. Construction of `moved_pair` was aborted by the exception, and its already-constructed members were destroyed. In this case, the `MoveClass` member was destroyed, printing `destroying MoveClass(13) variable`. Next we see the `Error found: abort!` message printed by `main()`.
+
+When we try to print `my_pair.first` again, it shows the `MoveClass` member is empty. Since `moved_pair` was initialized with `std::move`, the `MoveClass` member (which has a move constructor) got move constructed and `my_pair.first` was nulled. Finally, `my_pair` was destroyed at the end of main().
+
+The `strong exception guarantee` was not preserved. Note that the above problem could have been avoided if `std::pair` had tried to do a copy instead of a move.
+
+Because `noexcept` functions are no-throw/no-fail, they implicitly meet the criteria for the `strong exception guarantee`. Thus, a `noexcept` move constructor is guaranteed to succeed.
+We can use the standard library function `std::move_if_noexcept()` to determine whether a move or a copy should be performed. 
+
+`std::move_if_noexcept` will return a movable r-value if the object has a noexcept move constructor, otherwise it will return a copyable l-value. We can use the `noexcept` specifier in conjunction with `std::move_if_noexcept` to use move semantics only when a strong exception guarantee exists (and use copy semantics otherwise). 
+
+```cpp
+//std::pair moved_pair{std::move(my_pair)}; 
+std::pair moved_pair{std::move_if_noexcept(my_pair)}; 
+```
+
+Running the program again prints:
+
+```
+destroying MoveClass(empty)
+my_pair.first: MoveClass(13)
+destroying MoveClass(13)
+Error found: abort!
+my_pair.first: MoveClass(13)
+destroying MoveClass(13)
+```
+
+After the exception was thrown, the sub-object `my_pair.first` still points to the value `13`.
+The move constructor of `std::pair` isn’t `noexcept` (as of C++20), so `std::move_if_noexcept` returns `my_pair` as an l-value reference. This causes `moved_pair` to be created via the copy constructor (rather than the move constructor). The copy constructor can throw safely, because it doesn’t modify the source object.
+
+The standard library uses `std::move_if_noexcept` often to optimize for functions that are `noexcept`. For example, `std::vector::resize` will use move semantics if the element type has a `noexcept` move constructor, and copy semantics otherwise. This means `std::vector` will generally operate faster with objects that have a `noexcept` move constructor.
+
+**Warning**: If a type has both potentially throwing move semantics and deleted copy semantics (the copy constructor and copy assignment operator are unavailable), then `std::move_if_noexcept` will waive the strong guarantee and invoke move semantics. This conditional waiving of the strong guarantee is common in the standard library container classes, since they use `std::move_if_noexcept` often.
+
+---
