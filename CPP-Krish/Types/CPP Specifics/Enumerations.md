@@ -376,22 +376,6 @@ int main() {
 ```
 
 ---
-####  Operator overloading
-
-Similarly, C++ also supports **operator overloading**, which lets us define overloads of existing operators, so that we can make those operators work with our program-defined data types.
-
-Basic operator overloading is fairly straightforward:
-- Define a function using the name of the operator as the function’s name.
-- Add a parameter of the appropriate type for each operand (in left-to-right order). One of these parameters must be a user-defined type (a class type or an enumerated type), otherwise the compiler will error.
-- Set the return type to whatever type makes sense.
-- Use a return statement to return the result of the operation.
-
-When the compiler encounters the use of an operator in an expression and one or more of the operands is a user-defined type, the compiler will check to see if there is an overloaded operator function that it can use to resolve that call. For example, given some expression `x + y`, the compiler will use function overload resolution to see if there is an `operator+(x, y)` function call that it can use to evaluate the operation. If a non-ambiguous `operator+` function can be found, it will be called, and the result of the operation returned as the return value.
-
-We cover operator overloading in much more detail in chapter [chapter 21](https://www.learncpp.com/#Chapter21).
-Operators can also be overloaded as member functions of the left-most operand. We discuss this in lesson [21.5 -- Overloading operators using member functions](https://www.learncpp.com/cpp-tutorial/overloading-operators-using-member-functions/).
-
----
 #### Overloading `operator<<` to print an enumerator 
 
 Consider a simple expression like `std::cout << 5`. `std::cout` has type `std::ostream` (which is a user-defined type in the standard library), and `5` is a literal of type `int`.

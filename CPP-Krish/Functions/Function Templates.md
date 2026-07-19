@@ -370,7 +370,7 @@ double getSqrt<-5.0>() {
 }
 ```
 
-The static_assert condition is false, so the compiler asserts out.
+The `static_assert` condition is false, so the compiler asserts out.
 
 Non-type template parameters are used primarily when we need to pass constexpr values to functions (or class types) so they can be used in contexts that require a constant expression.
 
@@ -459,5 +459,54 @@ The most conventional way to address this issue is to put all your template code
 The ODR says that types, templates, inline functions, and inline variables are allowed to have identical definitions in different files. So there is no problem if the template definition is copied into multiple files (as long as each definition is identical).
 
 But what about the instantiated functions themselves? **Functions implicitly instantiated from templates are implicitly inline**. And as you know, inline functions can be defined in multiple files, so long as the definition is identical in each. The templates themselves are not inline, as the concept of inline only applies to variables and functions.
+
+---
+### Function Template Specialization
+
+ When using templates, a particular function will have the same implementation details for each instanced type (just using different types). But, there are cases where it is useful to implement a templated function slightly differently for a specific data type.
+ 
+ One way to get different behavior for a given type is to define a non-template function:
+
+```cpp
+template <typename T>
+void print(const T& t) { std::cout << t << '\n'; }
+void print(double d ) { std::cout << std::scientific << d << '\n'; }
+
+int main() {
+    print(5);
+    print(6.7);
+}
+```
+
+**Template specialization** allows us to explicitly define different implementations of a template for specific types or values. When all of the template parameters are specialized, it is called a full specialization. When only some of the template parameters are specialized, it is called a partial specialization. Example:
+
+```cpp
+// Primary template (must come first)
+template <typename T>
+void print(const T& t) { cout << t << '\n'; }
+template<>// template parameter declaration containing no template parameters
+void print<double>(const double& d)  { cout << std::scientific << d << '\n'; }
+
+int main() {
+    print(5);
+    print(6.7);
+}
+```
+
+In order to specialize a template, the compiler first must have seen a declaration for the primary template. The primary template in the example above is `print<T>(const T&)`.
+
+Now, let’s take a closer look at our function template specialization:
+
+- We need a template parameter declaration so the compiler knows we’re doing something related to templates. However, in this case, we don’t actually need any template parameters, so we use an empty pair of angled brackets. Since we have no template parameters in the specialization, this is a full specialization.
+
+- The specialization must have the same signature as the primary template (except the specialization substitutes `double` anywhere the primary template uses `T`). Because the primary template has a parameter of type `const T&`, the specialization must have a parameter of type `const double&`.
+
+- If a matching non-template function and a matching template function specialization both exist, **the non-template function will take precedence**. Also, full specializations are not implicitly inline, so if you define one in a header file, make sure you `inline` it to avoid ODR violations.
+
+- **Partial Specializations are not allowed for Function Templates.**
+
+- Function template specializations can be deleted (using `= delete`), just like normal functions, if you want any function calls that resolve to the specialization to produce a compilation error. 
+
+- In general, you should avoid function template specializations in favour of non-template functions whenever possible.
 
 ---
