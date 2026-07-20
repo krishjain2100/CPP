@@ -2,8 +2,6 @@ Modifying individual bits within an object is called **bit manipulation**.
 When individual bits of an object are used as Boolean values, the bits are called **bit flags**.
 To define a set of bit flags, we typically use an unsigned integer of the appropriate size (8 bits, 16 bits, 32 bits, etc… depending on how many flags we have), or `std::bitset`.
 
-#### Bit numbering and bit positions
-
 Given a sequence of bits, we typically number the bits from right to left, starting with 0 (not 1). Each number denotes a **bit position**.
 76543210  Bit position
 00000101  Bit sequence
@@ -195,13 +193,5 @@ Then you could use bit flags to pass in only the options you wanted:
 ```cpp
 someFunction(option10 | option32);
 ```
-
----
-
-It may not sound right but before C++20, the official C++ standard actually allowed compilers to use three different ways to represent negative numbers:
-
-1. **Two's Complement** (What we use today, now a compulsion as of C++20)
-2. **One's Complement** 
-3. **Sign-Magnitude** (Just using the first bit as a +/- sign)
 
 ---

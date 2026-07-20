@@ -1,10 +1,10 @@
 Input and output functionality is not defined as part of the core C++ language, but rather is provided through the C++ standard library and thus resides in the std namespace. 
 
-**The iostream library**
+#### **The iostream library**
 
 When you include the iostream header, you gain access to a whole hierarchy of classes responsible for providing I/O functionality, including one class that is itself named iostream.
 
-**Streams**
+#### **Streams**
 
 I/O in C++ is implemented with streams, which is just a sequence of bytes that can be accessed sequentially. Over time, a stream may produce or consume potentially unlimited amounts of data. Typically we deal with two different types of streams. 
 
@@ -16,7 +16,8 @@ Some devices, such as files and networks, are capable of being both input and ou
 
 Programmer only has to learn how to interact with the streams in order to read and write data to many different kinds of devices. The details about how the stream interfaces with the actual devices they are hooked up to is left up to the environment or OS.
 
-**Input/Output in C++**
+---
+### Input/Output in C++
 
 `ios` is a typedef for `std::basic_ios<char>` that defines a bunch of stuff that is common to both input and output streams. We’ll deal with this below.
 
@@ -26,7 +27,8 @@ The `ostream` class is the primary class used when dealing with output streams
 
 The **iostream** class can handle both input and output, allowing bidirectional I/O.
 
-**Standard streams in C++**
+---
+### Standard streams in C++
 
 A standard stream is a pre-connected stream provided to a computer program by its environment. C++ comes with 4 predefined standard stream objects that have already been set up for your use:
 
@@ -160,7 +162,7 @@ There are a few more useful input functions:
 - `putback(char ch)` allows you to put a character of your choice back into the stream to be read by the next call.
 
 ---
-### Output with `ostream` and ios
+### Output with `ostream` and `ios`
 
 Both `istream` and `ostream` were derived from a class called `ios`. One of the jobs of `ios` (and `ios_base`) is to control the formatting options for output. There are two ways to change the formatting options: flags, and manipulators.
 **Flags** are boolean variables that can be turned on and off. 
@@ -558,7 +560,8 @@ To help us out, the following functions live in the `cctype` header:
 |std::isspace(int)|Returns non-zero if the parameter is whitespace|
 |std::isxdigit(int)|Returns non-zero if the parameter is a hexadecimal digit (0-9, a-f, A-F)|
 
-**String validation**
+---
+### String validation
 
 Example: our validation criteria will be that the user enters only alphabetic characters or spaces. If anything else is encountered, the input will be rejected.
 
@@ -620,8 +623,8 @@ int main() {
 
 However, this function is still subject to several constraints: if `#`, `@`,  `_`, and `?` are valid characters in the user input, this function won’t work, because those symbols have been given special meanings. Also, unlike with regular expressions, there is no template symbol that means “a variable number of characters can be entered”. Thus, such a template could not be used to ensure the user enters two words separated by a whitespace, because it can not handle the fact that the words are of variable lengths. For such problems, the non-template approach is generally more appropriate.
 
-
-**Numeric validation**
+---
+### Numeric validation
 
 The obvious way to proceed is to use the extraction operator to extract input to a numeric type. By checking the failbit, we can then tell whether the user entered a number or not:
 
@@ -698,8 +701,8 @@ int main() {
 }
 ```
 
-
-**Numeric validation as a string**
+---
+### Numeric validation as a string
 
 Another way to process numeric input is to read it in as a string, then try to convert it to a numeric type:
 
@@ -752,7 +755,7 @@ To use the file I/O classes, you will need to include the fstream header.
 Unlike the `cout`, `cin`, `cerr`, and `clog` streams, which are already ready for use, file streams have to be explicitly set up by the programmer. However, this is simple.
 To open a file for reading and/or writing, simply instantiate an object of the appropriate file I/O class, with the name of the file as a parameter. Then use the insertion (<<) or extraction (>>) operator to write to or read data from the file. To close a file: explicitly call the close() function, or just let the file I/O variable go out of scope (file I/O class destructor will close the file for you).
 
-**File output**
+### **File output**
 
 We’re going to use the `ofstream` class:
 
@@ -775,7 +778,7 @@ int main() {
 
 Note that it is also possible to use the `put()` function to write a single character to the file.
 
-**File input**
+#### **File input**
 
 Note that `ifstream` returns a 0 if we’ve reached the end of the file (EOF). We’ll use this fact to determine how much to read.
 
@@ -807,7 +810,7 @@ int main() {
 
 Remember that the extraction operator breaks on whitespace. In order to read in entire lines, we’ll have to use the `getline()` function.
 
-**Buffered output**
+#### **Buffered output**
 
 Output in C++ may be buffered. This means that anything that is output to a file stream may not be written to disk immediately. Instead, several output operations may be batched and handled together. This is done for performance reasons. When a buffer is written to disk, this is called **flushing** the buffer. One way to cause the buffer to be flushed is to close the file, the contents of the buffer will be flushed to disk, and then the file will be closed.
 
@@ -818,7 +821,7 @@ It is possible to flush the buffer manually using the `ostream::flush()` functio
 
 `std::endl`; also flushes the output stream. Consequently, overuse of `std::endl` can have performance impacts when doing buffered I/O where flushes are expensive (such as writing to a file). For this reason, performance conscious programmers will often use `‘\n’` to insert a newline into the output stream, to avoid unnecessary flushing of the buffer.
 
-**File modes**
+#### **File modes**
 
 The original file is completely overwritten each time the program is run. Now we want to append some more data to the end of the file The file stream constructors take an optional second parameter that allows you to specify information about how the file should be opened. This parameter is called mode, and the valid flags that it accepts live in the `ios` class.
 
@@ -837,7 +840,7 @@ It is possible to specify multiple flags by bitwise ORing them together (using t
 
 Due to the way `fstream` was designed, it may fail if `std::ios::in` is used and the file being opened does not exist. If you need to create a new file using `fstream`, use `std::ios::out` mode only.
 
-**Explicitly opening files using open()**
+#### **Explicitly opening files using open()**
 
 It’s possible to explicitly open a file stream using `open()`. It works just like the file stream constructors, it takes a file name and an optional file mode. For example:
 
@@ -856,11 +859,11 @@ outf.close();
 ---
 ### Random file I/O
 
-**The file pointer**
+#### The file pointer
 
 Each file stream class contains a file pointer that is used to keep track of the current read/write position within the file. When something is read from or written to a file, the reading/writing happens at the file pointer’s current location. By default, when opening a file for reading or writing, the file pointer is set to the beginning of the file. However, if a file is opened in append mode, the file pointer is moved to the end of the file, so that writing does not overwrite any of the current contents of the file.
 
-**Random file access with `seekg()` and `seekp()`**
+#### Random file access with `seekg()` and `seekp()`
 
 It is also possible to do random file access, i.e., skip around to various points in the file to read its contents.  This is is done by manipulating the file pointer using either `seekg()` function (for input) and `seekp()` function (for output). g stands for “get” and the p for “put”. 
 For some types of streams, `seekg()` (changing the read position) and `seekp()` (changing the write position) operate independently, however, with file streams, the read and write position are always identical, so they can be used interchangeably.
@@ -902,8 +905,7 @@ On the author’s machine, this prints: 64
 which is how long sample.txt is in bytes (assuming a newline after the last line).
 The result of `64` in the prior example occurred on Windows. If you run the example on Unix, you’ll get `60` instead, due to the smaller newline representation. You may get something else if your file is padded with trailing zero bytes.
 
-
-**Reading and writing a file at the same time using `fstream`**
+#### Reading and writing a file at the same time using `fstream`
 
 The `fstream` class is _almost_ capable of both reading and writing a file at the same time.
 The caveat here is that it is not possible to switch between reading and writing arbitrarily. Once a read or write has taken place, the only way to switch between the two is to perform an operation that modifies the file position (e.g. a seek). If you do not do this, any number of strange and bizarre things may occur. If you don’t actually want to move the file pointer (because it’s already in the spot you want), you can always seek to the current position:
@@ -961,12 +963,12 @@ int main() {
 }
 ```
 
-**Other useful file functions**
+#### Other useful file functions
 
 To delete a file, use the `remove()` function.
 Also, the `is_open()` function will return true if the stream is currently open, and false otherwise.
 
-**A warning about writing pointers to disk**
+#### A warning about writing pointers to disk
 
 Do not write memory addresses to files. The variables that were originally at those addresses may be at different addresses when you read their values back in from disk during another run of the program, and the addresses will be invalid.
 

@@ -1,3 +1,14 @@
+
+The memory that a program uses is typically divided into a few different areas, called segments:
+- The code segment (also called a text segment), where the compiled program sits in memory. The code segment is typically read-only.
+- The bss segment (also called the uninitialized data segment), where zero-initialized global and static variables are stored.
+- The data segment (also called the initialized data segment), where initialized global and static variables are stored.
+- The heap, where dynamically allocated variables are allocated from.
+- The call stack, where function parameters, local variables, and other function-related information are stored.
+
+---
+### Types of Memory Allocation
+
 C++ supports three basic types of memory allocation:
 
 - **Static memory allocation** happens for static and global variables. Memory for these types of variables is allocated once when your program is run and persists throughout the life of your program.
@@ -10,7 +21,10 @@ Both static and automatic allocation have two things in common:
 
 Most normal variables (including fixed arrays) are allocated in **stack**. The amount of stack memory for a program is generally small, Visual Studio defaults the stack size to 1MB. If you exceed this number, stack overflow will result, and the operating system will probably close down the program.
 
-**Dynamic memory allocation** is a way for running programs to request memory from the operating system when needed. It is allocated from a much larger pool of memory managed by the operating system called the **heap**. On modern machines, the heap can be gigabytes in size.
+---
+### Dynamic Memory Allocation
+
+It is a way for running programs to request memory from the operating system when needed. It is allocated from a much larger pool of memory managed by the operating system called the **heap**. On modern machines, the heap can be gigabytes in size.
 
 Allocating a _single_ variable dynamically:
 

@@ -88,6 +88,11 @@ You might assume that types that use less memory would be faster than types that
 ---
 ### Integer types
 
+Before C++20, the official C++ standard actually allowed compilers to use three different ways to represent negative numbers:
+1. **Two's Complement** (What we use today, now a compulsion as of C++20)
+2. **One's Complement** 
+3. **Sign-Magnitude** (Just using the first bit as a +/- sign)
+
 C++ has _4_ primary fundamental integer types available for use:
 
 | Type          | Minimum Size | Note                                      |
