@@ -501,7 +501,7 @@ std::cout << os.str();
 `clear()` resets any error flags that may have been set and returns the stream back to the ok state. We will talk more about the stream state and error flags below.
 
 ---
-### Stream states and input validation
+### Stream states 
 
 The `ios_base` class contains several state flags that are used to signal various conditions that may occur when using streams:
 
@@ -535,8 +535,8 @@ std::cin >> age;
 
 If the user enters non-numeric data, such as “Alex”, `cin` will be unable to extract anything to age, and the `failbit` will be set. If an error occurs and a stream is set to anything other than `goodbit`, further stream operations on that stream will be ignored. This condition can be cleared by calling the `clear()` function.
 
-
-**Input validation**
+---
+### Input validation
 
 Input validation can generally be broken down into two types: string and numeric.
 

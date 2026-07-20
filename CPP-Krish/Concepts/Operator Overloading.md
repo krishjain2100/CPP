@@ -108,9 +108,7 @@ The one difference is that the friend function declaration inside the class serv
 Prefer overloading operators as normal functions instead of friends if it’s possible to do so without adding additional functions. You don't want more functions touching your internals but also don't want to make more access functions.
 
 ---
-### Overloading the I/O operators
-
-**Overloading `operator<<`**
+### Overloading `operator<<`
 
 The left operand is the `std::cout` object, and the right operand is your class object. `std::cout` is actually an object of type `std::ostream`. Therefore, our overloaded function will look like this:
 
@@ -148,7 +146,8 @@ Returning the left-hand parameter by reference is okay in this case, since the l
 
 In the above example, `operator<<` is a friend because it needs direct access to the member of `Point`. However, if the members could be accessed via getters, then `operator<<` could be implemented as a non-friend.
 
-**Overloading `operator>>`**
+---
+### Overloading `operator>>`
 
 ```cpp
 class Point {
