@@ -1,3 +1,5 @@
+### Protocol
+
 A protocol defines the format and the order of messages exchanged between two or more communicating entities, as well as the actions taken on the transmission and/or receipt of a message or other event.
 
 ---
@@ -6,22 +8,22 @@ A protocol defines the format and the order of messages exchanged between two or
 The computers and other devices connected to the Internet are often referred to as end systems. E.g., Desktop PCs, Macs, and Linux boxes), servers (e.g., web and e-mail servers),
 mobile devices (e.g., laptops, smartphones, and tablets)
 
-End systems are also referred to as hosts because they host (i.e,, run) application programs such as a Web browser program, a Web server program, an e-mail client program, or an e-mail server programs. Hosts further divided: clients and servers. Clients tend to be desktops, laptops, smartphones, whereas servers tend to be more powerful machines that store and distribute web pages, stream video, relay e-mail, and so on. Most of the servers from which we receive search results reside in large data centres.
+End systems are also referred to as hosts because they host (i.e., run) application programs such as a Web browser program, a Web server program, an e-mail client program, or an e-mail server programs. Hosts further divided: clients and servers. Clients tend to be desktops, laptops, smartphones, whereas servers tend to be more powerful machines that store and distribute web pages, stream video, relay e-mail, and so on. Most of the servers from which we receive search results reside in large data centres.
 
 ---
 ### Access Networks
 
-The network that physically connects an end system to the first router (also known as the edge router) on a path from the end system to any other distant end system.
+It ishe network that physically connects an end system to the first router (also known as the edge router) on a path from the end system to any other distant end system.
 
 The two most prevalent types of broadband residential access are:
 - Digital Subscriber Line (DSL)
 - Cable
 
+#### DSL
+
 A residence typically obtains DSL Internet access from the same local telephone company (telco) that provides its wired local phone access. Thus, when DSL is used, a customer’s telco is also its ISP. Each customer’s DSL modem uses the existing telephone line exchange data with a **digital subscriber line access multiplexer (DSLAM)** located in the telco’s local central office (CO). The home’s DSL modem takes digital data and translates it to high frequency tones for transmission over telephone wires to the CO, the analog signals from many such houses are translated back into digital format at the DSLAM.
 
-
 ![[DSL.png]]
-
 
 The residential telephone line carries both data and traditional telephone signals simultaneously, which are encoded at different frequencies:
 - A high-speed downstream channel (internet to you), in the 50 kHz to 1 MHz band
@@ -29,6 +31,8 @@ The residential telephone line carries both data and traditional telephone signa
 - An ordinary two-way telephone channel, in the 0 to 4 kHz band
 
 This approach makes the single DSL link appear as if there were three separate links, so that a telephone call and an Internet connection can share the DSL link at the same time. On the customer side, a splitter separates the data and telephone signals arriving to the home and forwards the data signal to the DSL modem. On the telco side, in the CO, the DSLAM separates the data and phone signals and sends the data into the Internet. Hundreds or even thousands of households connect to a single DSLAM.
+
+#### Cable
 
 Cable Internet access makes use of the cable television company’s existing cable television infrastructure. Fiber optics connect the cable head end to neighbourhood junctions, from which traditional coaxial cable is then used to reach individual houses and apartments. Each neighbourhood junction typically supports 500 to 5,000 homes. Because both fiber and coaxial cable are employed in this system, it is often referred to as **hybrid fiber coax (HFC)**.
 
@@ -55,14 +59,14 @@ This provide an optical fiber path from the CO directly to the home. The simples
 ### Wireless access networks:
 
 - **Wireless Local Area Networks (WLANs)**
-	- **Range & Use Case:** Designed for short-range coverage, typically spanning about 100 feet. This is the standard technology used inside and immediately around a single building, such as a house or an office.
-	- **Technology & Speeds:** Operates using the 802.11 family of standards (which we commonly call Wi-Fi). Depending on the specific standard used (such as 802.11b, g, or n), transmission rates historically sit at 11, 54, or 450 Mbps.
-	- **Base Station:** The base station in this setup is the local **wireless access point** (often built into your home router).
+	- Designed for short-range coverage, typically spanning about 100 feet. This is the standard technology used inside and immediately around a single building, such as a house or an office.
+	- Operates using the 802.11 family of standards (which we commonly call Wi-Fi). Depending on the specific standard used (such as 802.11b, g, or n), transmission rates historically sit at 11, 54, or 450 Mbps.
+	- The base station in this setup is the local **wireless access point** (often built into your home router).
 	
 - **Wide-Area Cellular Access Networks**
-	- **Range & Use Case:** Designed for long-range, widespread coverage spanning tens of kilometers. This allows devices to stay connected while moving across cities or highways.
-	- **Technology & Speeds:** Provided and managed by mobile network operators (telecom companies) using infrastructure like 4G and 5G networks. The typical speeds are in the 10's of Mbps, though modern 5G can peak much higher.
-	- **Base Station:** The base station in this setup is the physical **cellular tower**.
+	- Designed for long-range, widespread coverage spanning tens of kilometers. This allows devices to stay connected while moving across cities or highways.
+	- Provided and managed by mobile network operators (telecom companies) using infrastructure like 4G and 5G networks. The typical speeds are in the 10's of Mbps, though modern 5G can peak much higher.
+	- The base station in this setup is the physical **cellular tower**.
 
 ---
 ### Enterprise Network
@@ -81,7 +85,7 @@ The diagram illustrates the flow of data from the end-user up to the internet, u
 ---
 ### Data Centres and Cloud Computing
 
-Data center networks are designed to host the massive amounts of _content and services_ that those people are trying to access. Because these servers are hosting services used by thousands or millions of people simultaneously, the connections between the servers and to the outside internet must be incredibly fast.  The previously discussed networks (mobile, home, and enterprise) on the left side of the diagram. They represent the "edges" where users live. The data centres represent the core destinations.
+Data center networks are designed to host the massive amounts of content and services that people are trying to access. Because these servers are hosting services used by thousands or millions of people simultaneously, the connections between the servers and to the outside internet must be incredibly fast.  The previously discussed networks (mobile, home, and enterprise) on the left side of the diagram. They represent the "edges" where users live. The data centres represent the core destinations.
 
  Because of their massive traffic demands, they connect directly to **national or global ISPs** or operate within their own dedicated **content provider networks** (like the private networks run by Google or Netflix).
 
@@ -90,23 +94,23 @@ Data center networks are designed to host the massive amounts of _content and se
 Internet companies such as Google, Microsoft, Amazon have built massive data centers, each housing tens to hundreds of thousands of hosts. These data connected to the Internet, as well as internally. Amazon data centres serve three purposes:
 - They serve Amazon e-commerce pages to users, for example, pages describing products and purchase information. 
 - They serve as massively parallel computing infrastructures for Amazon-specific data processing tasks. 
-- They provide cloud computing to other companies. Today a major trend in computing is for companies to use a cloud provider such as Amazon to handle all of their IT needs. For example, Airbnb edo not own and manage their own data centres but instead run their entire web-based services in the Amazon cloud, called Amazon Web Services (AWS).
+- They provide cloud computing to other companies. Today a major trend in computing is for companies to use a cloud provider such as Amazon to handle all of their IT needs. For example, Airbnb does not own and manage their own data centres but instead run their entire web-based services in the Amazon cloud, called Amazon Web Services (AWS).
 
 The hosts in data centres, called blades and resembling pizza boxes, are generally commodity hosts that include CPU, memory, and disk storage. The hosts are stacked in racks, with each rack typically having 20 to 40 blades. The racks are then interconnected using sophisticated and evolving data centre network designs.
 
 ---
 ### The Network Core
 
-The network core is a global mesh of interconnected routers. Itrepresents the regional, national, and global ISPs that act as the backbone connecting all the "edge" access networks (homes, mobile networks, enterprises, and data centres) together.
+The network core is a global mesh of interconnected routers. It represents the regional, national, and global ISPs that act as the backbone connecting all the edge access networks together.
 
-The core operates using packet-switching. End-system hosts break messages down into smaller data chunks called **packets**. The network then forwards these packets hop-by-hop from one router to the next across links until they reach their final destination.
+The core operates using **packet-switching**. End-system hosts break messages down into smaller data chunks called **packets**. The network then forwards these packets hop-by-hop from one router to the next across links until they reach their final destination.
 
 **Routing (The Global Action)**
 - Routing is the high-level, network-wide planning phase.
 - It utilises **routing algorithms** that communicate across multiple routers to determine the most efficient end-to-end path a packet should take from its source to its destination.
 
 **Forwarding (The Local Action)**
-- Forwarding (also known as "switching") is the localized, physical action that happens inside a single, specific router.
+- Forwarding (also known as **switching**) is the localized, physical action that happens inside a single, specific router.
 - When a packet arrives at a router's input link, the router inspects the destination address in the packet's header. It then consults its **local forwarding table** to find the corresponding output link (link "32" in the table maps to output link "2") and physically moves the packet to that output link.
 
 In standard internet packet-switching, the complete path is **not** determined before the host sends the packet. Instead, the path is navigated step-by-step, dynamically at every single router along the way.
@@ -116,16 +120,14 @@ In standard internet packet-switching, the complete path is **not** determined b
 
 Routers do not forward data bit-by-bit as it arrives. They use a **store-and-forward** method, meaning the router must receive and store the _entire_ packet before it can begin transmitting the first bit of that packet onto the next link.
 
-**Transmission Delay:** The time it takes to push a packet out onto a link is calculated using the formula $L/R$. $L$ represents the packet size (in bits) and $R$ represents the transmission rate of the link (in bits per second, or bps).
+**Transmission Delay:** The time it takes to push a packet out onto a link is calculated using the formula $L/R$. $L$ is the packet size (in bits) and $R$ is the transmission rate of the link (in bits per second, or bps).
 
-**Queueing:** This happens when packets arrive at a router faster than the router can send them out. Assume, Hosts A and B are connected to the router with very fast links (100 Mb/s). However, the router's output link to the rest of the network is much slower (1.5 Mb/s).
-
-A router's memory buffer is finite; it can only hold so many queued packets at once. If the high-speed incoming traffic continues for too long, the router's memory buffer will eventually fill up entirely. When a new packet arrives and there is no room left in the buffer, the router has no choice but to drop (delete) it. This is known as **packet loss**, and it is the primary reason why video streams buffer or downloads stall during heavy network congestion.
+**Queueing:** This happens when packets arrive at a router faster than the router can send them out. A router's memory buffer is finite, it can only hold so many queued packets at once. When a new packet arrives and there is no room left in the buffer, the router has no choice but to drop (delete) it. This is known as **packet loss**, and it is the primary reason why video streams buffer or downloads stall during heavy network congestion.
 
 ---
 ### Circuit Switching
 
-Unlike packet switching (which dynamically shares network links), circuit switching works by allocating and **reserving dedicated end-to-end resources** for a specific session or "call" between a source and a destination.
+Unlike packet switching (which dynamically shares network links), circuit switching works by allocating and reserving dedicated end-to-end resources for a specific session or call between a source and a destination.
 
 Because a dedicated path is carved out just for that connection, there is no sharing with other users, which guarantees a consistent, predictable level of performance. This is the model historically used by traditional telephone networks.
 
@@ -147,7 +149,7 @@ While packet switching is the foundation of the internet, it isn't perfect.
 - **The Cons:** Because resources aren't reserved, the network can suffer from **excessive congestion**. If too many people try to send data at once, it leads to the queueing delays and packet loss (buffer overflow) discussed in previous slides. Because of this, packet-switched networks require complex protocols layered on top to manage reliable data transfer and control congestion.
 
 ---
-### How Circuits are Divided (FDM vs TDM)
+### FDM vs TDM
 
 When a physical link is split into multiple circuits, it is typically done using one of two multiplexing methods:
 
@@ -208,8 +210,7 @@ Designing the Internet involves managing a massively complex system:
 To handle this massive complexity, network designers use an object-oriented, layered approach.
 
 - Instead of building one massive, monolithic network program, the system is broken down into smaller, manageable pieces (objects or layers).
-- Each layer has a specific job and communicates with the layers directly above and below it using clearly defined **interfaces**. The layers do not need to know _how_ the other layers work, only _how to talk to them_ via the interface.
-
+- Each layer has a specific job and communicates with the layers directly above and below it using clearly defined **interfaces**. The layers do not need to know how the other layers work, only how to talk to them via the interface.
 
 Using a layered architecture provides several critical benefits to network design:
 
@@ -241,7 +242,7 @@ Historically, there were different ways to conceptualize network layers.
 ---
 ### Encapsulation Process
 
-When a host sends data, it travels top-down through the Internet protocol stack. At each step, the current layer takes the entire package from the layer above it and _encapsulates_ it by adding its own specific header.
+When a host sends data, it travels top-down through the Internet protocol stack. At each step, the current layer takes the entire package from the layer above it and encapsulates it by adding its own specific header.
 
 1. **The Message (Application Layer):** The process begins when a network application (like a web browser or email client) creates the raw data. At this top level, the data is called a **Message** ($M$).
 
@@ -314,7 +315,7 @@ The fraction of lost packets increases as the traffic intensity increases. There
 
 - In a network, data flows through a series of links much like fluid flowing through a series of pipes. The end-to-end throughput is always constrained by the slowest link in the path, known as the **bottleneck link**.
 
-- Once you determine the bottleneck link, you can calculate a rough approximation of how long a file transfer will take. (This approximation ignores external factors like processing delays, propagation delays, and protocol overhead). The time to transfer a file of $F$ bits is $F / \min\{R_s, R_c\}$.
+- Once you determine the bottleneck link, you can calculate a rough approximation of how long a file transfer will take. This approximation ignores external factors like processing delays, propagation delays, and protocol overhead. The time to transfer a file of $F$ bits is $F / \min\{R_s, R_c\}$.
 
 - The **core of the Internet** is generally over-provisioned with massive, high-speed fiber links that experience very little congestion.  Because the core acts as an incredibly wide pipe, the constraining factor for a single connection is almost always the **access network** at the edges (either the server's $R_s$ or the client's $R_c$).
 
@@ -323,7 +324,7 @@ The fraction of lost packets increases as the traffic intensity increases. There
 ---
 ### Security
 
-The Internet was originally designed based on a model of mutually trusting users attached to a transparent network, meaning strict security was not fundamentally built-in. Because user identity was historically taken at face value, modern network protocol designers are now playing "catch-up" to implement security considerations across all layers of the network architecture.
+The Internet was originally designed based on a model of mutually trusting users, meaning strict security was not fundamentally built-in. Modern network protocol designers are now playing "catch-up" to implement security considerations across all layers of the network architecture.
 
 Malware can infect connected devices to delete files or install spyware, which secretly collects and transmits private information like passwords and social security numbers back to attackers. Much of today's malware is self-replicating, allowing it to spread exponentially from one infected host to many others.
 
@@ -357,13 +358,12 @@ In a Distributed DoS (DDoS) attack, attackers select a target and leverage their
 
 - **Integrity Checks:** Digital signatures are utilised to prevent tampering and detect if a packet's payload has been altered in transit.
 
-- **Firewalls:** These are specialized middle-boxes placed in access and core networks that operate on a "off-by-default" basis, i.e., it assumes _all_ incoming traffic is malicious unless proven otherwise, actively filtering incoming packets to restrict specific senders, receivers, or applications, and detecting or reacting to DoS attacks.
+- **Firewalls:** These are specialized middle-boxes placed in access and core networks that operate on an off-by-default basis, i.e., it assumes _all_ incoming traffic is malicious unless proven otherwise, actively filtering incoming packets to restrict specific senders, receivers, or applications, and detecting or reacting to DoS attacks.
 
 ---
 ### Application Layer
 
 Network applications generally follow one of two structural models: **Client-server** or **Peer-to-peer (P2P)**.
-
 #### Client-Server Architecture
 
 In this model, the roles of devices are strictly separated into servers and clients.
@@ -371,7 +371,7 @@ In this model, the roles of devices are strictly separated into servers and clie
 - Server:
     - Acts as an **always-on host**.
     - Has a **permanent IP address** so clients can always find it.
-    - Is often housed in massive data centers to allow for scaling when traffic increases.
+    - Is often housed in massive data centres to allow for scaling when traffic increases.
 
 - Clients:
     - Initiate contact and communicate exclusively with the server.
@@ -385,11 +385,11 @@ In this model, the roles of devices are strictly separated into servers and clie
 
 This model completely removes the central server, relying instead on direct communication between user devices.
 
-- There is no  server managing the network.
+- There is no server managing the network.
 - Arbitrary end systems (peers) communicate directly with one another.
 - Peers request services from other peers, and in return, they provide services to others.
 - **Self-Scalability**: When a new peer joins the network, they bring new service demands, but they also bring _new service capacity_ (like bandwidth and storage) to help support the network.
-- Because peers are intermittently connected and constantly change IP addresses, managing the network is highly complex.
+- Because peers are intermittently connected and constantly change IP addresses (scarcity in IPv4 and security in IPv6), managing the network is highly complex.
 - Example: P2P file sharing (such as BitTorrent).
 
 ---
@@ -428,6 +428,7 @@ When you develop an application, you must choose one of the available transport-
 - **Throughput:** Apps (like multimedia) require a minimum guaranteed amount of throughput to be effective, whereas _elastic apps_ simply make use of whatever throughput they can get (like Email, File Transfer).
 
 - **Timing:** Certain apps (like Internet telephony and interactive games) require extremely low delay to be effective. For non-real-time applications, lower delay is always preferable to higher delay, but no tight constraint is placed on the end-to-end delays.
+
 - **Security:** Apps may require the network to provide encryption and data integrity.
 
 ---
@@ -481,9 +482,9 @@ TLS is not a third Internet transport protocol, on the same level as TCP and UDP
 ---
 ### Final Comments on TCP/UDP
 
-Throughput or timing guarantees are services not provided by today’s Internet transport protocols. But time-sensitive applications often work fairly well because they have been designed to cope, to the greatest extent possible, with this lack of guarantee. Nevertheless, clever design has its limitations when delay is excessive, or the end-to-end throughput is limited. In summary, today’s Internet can often provide satisfactory service to time-sensitive applications, but it cannot provide any timing or throughput guarantee.
+Throughput or timing guarantees are services not provided by today’s Internet transport protocols. But time-sensitive applications often work fairly well because they have been designed to cope, to the greatest extent possible, with this lack of guarantee. Today’s Internet can often provide satisfactory service to time-sensitive applications, but it cannot provide any timing or throughput guarantee.
 
-Applications choose TCP primarily because TCP provides reliable data transfer but because Internet telephony applications (such as Skype) can often tolerate some loss but require a minimal rate to be effective, thryprefer to run their applications over UDP, thereby circumventing TCP’s congestion control mechanism and packet overheads. But because many firewalls are configured to block (most types of) UDP traffic, Internet telephony applications often are designed to use TCP as a backup if UDP communication fails.
+Applications choose TCP primarily because TCP provides reliable data transfer but because Internet telephony applications (such as Skype) can often tolerate some loss but require a minimal rate to be effective, they prefer to run their applications over UDP, thereby circumventing TCP’s congestion control mechanism and packet overheads. But because many firewalls are configured to block (most types of) UDP traffic, Internet telephony applications often are designed to use TCP as a backup if UDP communication fails.
 
 ---
 ### Application Layer Protocols
@@ -513,8 +514,8 @@ The Web is a client-server application that allows users to obtain documents fro
 
 - HTTP stands for **Hypertext Transfer Protocol** and serves as the Web's application-layer protocol. It operates on a client/server model. The client (e.g., a browser) requests, receives, and displays Web objects using the HTTP protocol. The server (e.g., a Web server) sends objects in response to these requests using the HTTP protocol.
 - HTTP relies on TCP for its transport layer. The connection process involves the client initiating a TCP connection (creating a socket) to the server on port 80, the server accepting the connection, the exchange of application-layer HTTP messages, and finally, the closing of the TCP connection.
-- HTTP is a "stateless" protocol, meaning the server maintains no information about past client requests. If a particular client asks for the same object twice in a period of a few seconds, the server does not respond by saying that it just served the object to the client; instead, the server resends the object, as it has completely forgotten what it did earlier.
-- Maintaining state is actively avoided because protocols that do so are complex; they require maintaining past history and reconciling inconsistent views if a server or client crashes.
+- HTTP is a stateless protocol, meaning the server maintains no information about past client requests. If a particular client asks for the same object twice in a period of a few seconds, the server does not respond by saying that it just served the object to the client, instead, the server resends the object, as it has completely forgotten what it did earlier.
+- Maintaining state is actively avoided because protocols that do so are complex, they require maintaining past history and reconciling inconsistent views if a server or client crashes.
 
 ---
 ### Persistent and Non-Persistent Connections
@@ -524,7 +525,7 @@ The Web is a client-server application that allows users to obtain documents fro
 - A TCP connection is opened, at most one object is sent over that connection, and then the TCP connection is closed.
 - Downloading multiple objects requires opening multiple separate connections.
 - For example, if a client requests an HTML file that references 10 JPEG images, the cycle of opening a TCP connection, requesting the object, receiving the object, and closing the connection is repeated for the HTML file and then again for each of the 10 images.
-- Performance is measured using Round Trip Time (RTT), defined as the time it takes for a small packet to travel from the client to the server and back.
+- Performance is measured using **Round Trip Time (RTT)**, defined as the time it takes for a small packet to travel from the client to the server and back.
 - Each object requires one RTT to initiate the TCP connection and one RTT for the HTTP request and the first few bytes of the response to return, in addition to the time it takes to transmit the full file. This makes the total non-persistent HTTP response time equal to 2RTT + file transmission time.
 - The primary issues with this approach are the mandatory 2 RTTs per object, the OS overhead required for every single TCP connection, and the fact that browsers often have to open multiple parallel TCP connections to fetch objects efficiently.
 
@@ -541,6 +542,15 @@ The Web is a client-server application that allows users to obtain documents fro
 ---
 ### HTTP Message Format
 
+These messages are written in ordinary ASCII text, meaning they are formatted to be human-readable. While a request message can have a single line or many lines, every line must end with a carriage return and a line feed character.
+
+The HTTP specifications outline two primary types of HTTP messages: 
+- Request messages
+- Response messages.
+
+---
+### Request Message 
+
 ```HTTP
 GET /somedir/page.html HTTP/1.1
 Host: www.someschool.edu
@@ -548,13 +558,6 @@ Connection: close
 User-agent: Mozilla/5.0
 Accept-language: fr
 ```
-
-These messages are written in ordinary ASCII text, meaning they are formatted to be human-readable. While a request message can have a single line or many lines, every line must end with a carriage return and a line feed character.
-
-The HTTP specifications outline two primary types of HTTP messages: request messages and response messages.
-
----
-### Request Message 
 
 An HTTP request message is divided into four main sections:
 
@@ -569,7 +572,7 @@ The method field in the request line dictates what action the client wants the s
 
 - **GET Method:** While its entity body is empty, it can still send inputted form data directly within the requested URL itself.
 
-- **POST Method:** This is typically used when a user fills out a web form (like a search engine query); the specific inputted data is sent from the client to the server inside the entity body.
+- **POST Method:** This is typically used when a user fills out a web form (like a search engine query), the specific inputted data is sent from the client to the server inside the entity body.
 
 - **HEAD Method:** This functions similarly to a GET request, but it asks the server to respond with only the HTTP headers and leave out the requested object itself. Application developers often use this for debugging.
 
@@ -604,9 +607,9 @@ Content-Type: text/html
 (data data data data data ...)
 ```
 
-An HTTP response message is divided into three distinct sections: an initial status line, header lines, and an entity body.
+An HTTP response message is divided into three distinct sections:
 
-- **The Status Line:** This always appears as the first line in a server-to-client response message. It consists of three specific fields: the protocol version, a status code, and a corresponding status phrase.
+- **The Status Line:** It consists of three specific fields: the protocol version, a status code, and a corresponding status phrase.
 - **The Header Lines:** Directly following the status line, these provide essential metadata about the server and the data being transmitted.
 - **The Entity Body:** This is the core of the message, containing the actual data of the requested object.
 
@@ -643,12 +646,12 @@ The status code and its associated phrase instantly indicate the result of the c
 ---
 ### Cookies
 
-While HTTP is inherently stateless, cookies  allow websites to track and identify users over time. This ability to maintain state across multiple transactions is heavily used for user authorisation, and maintaining user session state (such as staying logged into Web e-mail) or because the server wishes to restrict user access or because it wants to serve content as a function of the user identity. Cookie technology relies on four interacting components to function:
+While HTTP is inherently stateless, cookies allow websites to track and identify users over time. This ability to maintain state across multiple transactions is heavily used for user authorisation, and maintaining user session state (such as staying logged into Web e-mail) or because the server wishes to restrict user access or because it wants to serve content as a function of the user identity. Cookie technology relies on four interacting components to function:
 
-- A **`Set-cookie:` header line** generated by the server and included in the HTTP response message to assign a unique ID to the user.
-- A **`Cookie:` header line** included by the browser in subsequent HTTP request messages to identify the user to the server.
-- A **cookie file** kept locally on the user’s end system and actively managed by the user’s web browser.
-- A **back-end database** located at the Web site that links the assigned identification number to the user's specific activity or account information.
+- **`Set-cookie:` header line** generated by the server and included in the HTTP response message to assign a unique ID to the user.
+- **`Cookie:` header line** included by the browser in subsequent HTTP request messages to identify the user to the server.
+- **Cookie file** kept locally on the user’s end system and actively managed by the user’s web browser.
+- **Back-end database** located at the Web site that links the assigned identification number to the user's specific activity or account information.
 
 ![[Screenshot 2026-08-11 at 10.46.22 PM.png]]
 
@@ -671,7 +674,7 @@ When a user (e.g., Susan) visits a site like Amazon for the first time:
 
 - Because third-party cookies can track a user's common identity across many different websites, often invisibly, they have been disabled by default in browsers like Firefox and Safari, and in Chrome as of 2023.
 
-This example illustrates what happens when multiple independent websites use the same third-party advertising network (say **AdX**).
+The following example illustrates what happens when multiple independent websites use the same third-party advertising network (say **AdX**).
 
 A user decides to visit `nytimes.com` to read the sports section. 
 The `nytimes.com` server creates a **first-party cookie** (ID: 1634) to remember the user for their own site's purposes. However, the NY Times webpage also contains an embedded advertisement provided by **AdX.com**.
@@ -719,9 +722,6 @@ These caches are typically purchased and installed by ISPs, such as universities
 - By lowering the traffic intensity on access links, institutions can maintain fast network performance without having to pay for costly bandwidth upgrades.
 - Widespread caching reduces Web traffic across the entire Internet, which improves overall performance for all applications globally.
 
-
-**UNDERSTAND THE EXAMPLE GIVEN IN BOOK**
-
 ---
 ### Conditional GET
 
@@ -749,9 +749,9 @@ One of the primary goals of HTTP/2 is to get rid of (or at least reduce the numb
 
 - In addition to breaking down each HTTP message into independent frames, the framing sublayer also binary encodes the frames. Binary protocols are more efficient to parse, lead to slightly smaller frames, and are less error-prone.
 
-- Clients can optimize their application performance by assigning a priority weight (from 1 to 256) and dependency IDs to their requests, dictating the transmission order rather than relying on a strict FCFS queue.
+- Clients can also optimize their application performance by assigning a priority weight (from 1 to 256) and dependency IDs to their requests, dictating the transmission order rather than relying on a strict FCFS queue.
 
-- Another feature of HTTP/2 is the ability for a server to send multiple responses for a single client request. Instead of sitting idle waiting for explicit requests, the server can analyze an HTML base page and push necessary, unrequested objects to the client to save time.
+- Another feature of HTTP/2 is the ability for a server to send multiple responses for a single client request. Instead of sitting idle waiting for explicit requests, the server can analyse an HTML base page and push necessary, unrequested objects to the client to save time.
 
 ---
 ### Evolution to HTTP/3
@@ -766,7 +766,7 @@ HTTP/3 adds built-in security and provides per-object error and congestion contr
 ### File Transfer Protocols (FTP)
 
 FTP is used specifically for transferring files between a client and a server.
-It uses yhe TCP transport protocol
+It uses the TCP transport protocol
 It supports a robust set of file and directory operations, including uploading, downloading, renaming, and deleting files, as well as creating and listing directories.
 It also includes built-in support for resuming interrupted transfers and authenticating users.
 
@@ -775,11 +775,41 @@ A unique characteristic of FTP is that it uses **two separate connections** to o
 - **Control Connection:** This operates on port 21 and remains persistent throughout the entire session to handle commands and responses.
 - **Data Connection:** This uses a dynamic port and is opened and closed separately for _each individual data transfer_.
 
-To facilitate these connections, FTP operates in two distinct modes:
-- **Active Mode:** The client asks the server to connect back to it.
-- **Passive Mode:** The server asks the client to connect back to it.
+#### Why the dual-channel approach?
 
-To find the actual port number, the receiving machine applies a specific formula using those last two 8-bit numbers: $(p1 \times 256) + p2 = \text{Actual Port Number}$
+- If FTP used only a single connection, control commands (like telling the server to change directories, check your login status, or **abort a transfer**) would get stuck trapped behind a massive file download.
+
+- The Control Channel handles human-readable, ASCII text commands (`USER`, `PASS`, `LIST`) and server response codes (`230 Logged in`). The Data Channel handles raw, unformatted binary or text bytes representing the actual file contents. By separating them into two physical sockets, the FTP server and client didn't need a complex application-layer framing parser (like HTTP/2 uses today) to figure out whether an incoming byte was a text command or part of a data file. 
+
+---
+### Upstream and Downstream Firewalls 
+
+- Upstream / Client-Side Firewall:
+    - Sits between the client device and the public internet.
+    - It strictly blocks any _unsolicited incoming_ connections from the outsideto protect internal machines. It only allows connections that originate from _inside_ the network heading _out_.
+
+- **Downstream / Server-Side Firewall:**
+    - Sits in front of the FTP server.
+    - In modern setups (Passive mode, discussed below), it allows incoming data connections initiated by clients, but in older setups (Active mode), it required the server to initiate connections _out_ to clients, which often got blocked by client-side firewalls.
+
+---
+
+FTP uses two different operational modes to handle how the data connection is established:
+#### Active Mode (Legacy)
+
+- The client tells the server which port it is listening on. The server then initiates an **incoming** TCP connection _back_ to the client's data port.
+- Because the server initiates an inbound connection toward the client, the client's **upstream/client-side firewall blocks it** for security reasons.
+
+#### Passive Mode (Modern)
+
+- The client sends a `PASV` command to the server over the persistent control connection.
+- The server responds by opening a random port on itself and tells the client
+- The client initiates the TCP connection **outward** to the server's data port.
+
+---
+### Port Number (legacy which is continued)
+
+To find the actual port number in FTP, the receiving machine applies a specific formula using those last two 8-bit numbers: $(p1 \times 256) + p2 = \text{Actual Port Number}$
 
 Example: `192,168,1,5,19,136`:
 - The IP address is **192.168.1.5**
@@ -794,16 +824,48 @@ Internet protocols almost never change once they have been widely deployed.
 ---
 ### Telnet 
 
-Telnet is an application-layer protocol designed to let a user log in and interact with a remote computer/  
-It operates using TCP on **port 23**.
-It is highly interactive, and a single session might be left open for hours at a time.
-Telnet was eventually discontinued and phased out of modern use due to its extremely weak security protection (it sends commands and passwords over the network in plain, unencrypted text).
+A legacy application-layer protocol designed to let a user remotely log in, access a command-line interface, and interact with a remote computer.
+
+- **Transport Protocol & Port:** Operates using **TCP on Port 23**.
+- A single Telnet session can be left open and active for hours 
+- Security Vulnerability:
+    - Telnet was designed in an era of trusted academic networks.
+    - It transmits everything unencrypted plaintext including passwords
+    - Anyone using a packet sniffer (like Wireshark) on any switch or router along the path can instantly capture login credentials.
+- It is now entirely abandoned and replaced completely by **SSH (Secure Shell)**.
+
+If a remote computer expected an IBM terminal layout, but you were connecting from a DEC terminal, your keystrokes would be completely misinterpreted. To solve this, Telnet invented the **Network Virtual Terminal (NVT)**: When you type on your local machine, your Telnet client translates your specific physical keystrokes into standard NVT commands. The remote server then translates those NVT commands into whatever format its local operating system expects. This abstraction allowed any type of computer to talk to any other computer seamlessly
 
 ---
-### SSH (Secure Shell)
+### Secure Shell (SSH)
 
-SSH was developed to replace insecure protocols like Telnet.
-Unlike Telnet, SSH establishes a **secure, encrypted channel** between the client and the server _before_ any commands or passwords are ever sent across the network.
-It operates on **port 22**.
+SSH is a cryptographic network protocol developed as a secure replacement for Telnet.
+It operates using **TCP on Port 22**. It enables secure remote login, command execution, and data transfer by wrapping all communication inside a heavy cryptographic tunnel.
+
+SSH is structured as a suite of three independent protocol layers that build on top of each other:
+1. **The Transport Layer Protocol:**
+    - Sits directly on top of TCP.
+    - Performs **server host authentication** to ensure you are connecting to the legitimate server.
+    - Negotiates encryption algorithms (e.g., AES) and establishes a **symmetric encryption key** so every transmitted byte is immediately encrypted.
+
+2. **The User Authentication Layer:**
+    - Runs _inside_ the secure, encrypted transport layer tunnel.
+    - Verifies user identity using secure methods:
+        - **Public/Private Key Pairs:** The gold standard; uses cryptography to prove identity without transmitting secret keys.
+        - **Encrypted Passwords:** Safe because credentials travel strictly inside the established transport layer tunnel.
+
+3. **The Connection Layer:**
+    - Manages post-authentication activities.
+    - Multiplexes the single physical TCP connection into multiple logical **channels**, allowing simultaneous tasks (interactive shell, command execution, port forwarding, and file transfers).
+
+#### Security
+- **Host Public Keys:** Every SSH server has a unique public key.
+- **The `known_hosts` File:** When connecting for the first time, the client caches the server's public key in `~/.ssh/known_hosts`.
+- **Change Detection:** If a server's key changes unexpectedly in the future, SSH halts and throws a security warning, protecting against potential interception/MitM (Man in the middle) attacks.
+
+Because SSH creates a secure, trusted pipe between machines, it powers several auxiliary tools:
+- **SSH Tunneling / Port Forwarding:** Routable network traffic passed securely through an SSH connection (e.g., accessing internal databases behind firewalls).
+- **SFTP and SCP:** Secure file transfer protocols running over the encrypted SSH connection.
+- **Key-Based Automation:** Used extensively in CI/CD pipelines and automated scripts to log into cloud servers without passwords.
 
 ---
